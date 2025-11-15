@@ -289,12 +289,13 @@ export class TradeModule {
     const mintAuthority = this.sdk.pda.getMintAuthorityPDA();
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint.publicKey);
 
-    // Use Token2022 for associated token account
+    // CRITICAL: Even though this is Token2022 createV2, the bonding curve ATA
+    // MUST use legacy TOKEN_PROGRAM_ID because buy/sell instructions require it
     const associatedBonding = await getAssociatedTokenAddress(
       mint.publicKey,
       bondingCurve,
       true,
-      TOKEN_2022_PROGRAM_ID
+      TOKEN_PROGRAM_ID // Must be legacy for trading compatibility
     );
 
     const global = this.sdk.pda.getGlobalAccountPda();

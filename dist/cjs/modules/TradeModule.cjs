@@ -125,8 +125,10 @@ class TradeModule {
     async getCreateV2Instructions(creator, name, symbol, uri, mint, isMayhemMode = false) {
         const mintAuthority = this.sdk.pda.getMintAuthorityPDA();
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint.publicKey);
-        // Use Token2022 for associated token account
-        const associatedBonding = await splToken.getAssociatedTokenAddress(mint.publicKey, bondingCurve, true, splToken.TOKEN_2022_PROGRAM_ID);
+        // CRITICAL: Even though this is Token2022 createV2, the bonding curve ATA
+        // MUST use legacy TOKEN_PROGRAM_ID because buy/sell instructions require it
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint.publicKey, bondingCurve, true, splToken.TOKEN_PROGRAM_ID // Must be legacy for trading compatibility
+        );
         const global = this.sdk.pda.getGlobalAccountPda();
         const eventAuthority = this.sdk.pda.getEventAuthorityPda();
         // Mayhem mode accounts (indices 10-14)
