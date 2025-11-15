@@ -183,11 +183,16 @@ export class TradeModule {
     shouldUseBuyerAsBonding: boolean
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-    const associatedBonding = await getAssociatedTokenAddress(
-      mint,
-      bondingCurve,
-      true
-    );
+    
+    // Create bonding curve ATA if needed (using same token program detection)
+    const associatedBonding = 
+      await this.sdk.token.createAssociatedTokenAccountIfNeeded(
+        buyer,
+        bondingCurve,
+        mint,
+        tx,
+        commitment
+      );
 
     const associatedUser =
       await this.sdk.token.createAssociatedTokenAccountIfNeeded(
@@ -405,11 +410,16 @@ export class TradeModule {
     commitment: Commitment
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-    const associatedBonding = await getAssociatedTokenAddress(
-      mint,
-      bondingCurve,
-      true
-    );
+    
+    // Create bonding curve ATA if needed (using same token program detection)
+    const associatedBonding = 
+      await this.sdk.token.createAssociatedTokenAccountIfNeeded(
+        seller,
+        bondingCurve,
+        mint,
+        tx,
+        commitment
+      );
 
     const associatedUser =
       await this.sdk.token.createAssociatedTokenAccountIfNeeded(

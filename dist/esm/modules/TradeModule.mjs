@@ -51,7 +51,8 @@ class TradeModule {
     }
     async buildBuyIx(buyer, mint, amount, maxSolCost, tx, commitment, shouldUseBuyerAsBonding) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true);
+        // Create bonding curve ATA if needed (using same token program detection)
+        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, bondingCurve, mint, tx, commitment);
         const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, buyer, mint, tx, commitment);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
@@ -177,7 +178,8 @@ class TradeModule {
     }
     async buildSellIx(seller, mint, tokenAmount, minSolOutput, tx, commitment) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true);
+        // Create bonding curve ATA if needed (using same token program detection)
+        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, bondingCurve, mint, tx, commitment);
         const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, seller, mint, tx, commitment);
         const globalPda = this.sdk.pda.getGlobalAccountPda();
         const globalBuf = await this.sdk.connection.getAccountInfo(globalPda, commitment);
