@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { Transaction, PublicKey } from '@solana/web3.js';
 import { GlobalAccount } from '../GlobalAccount.mjs';
 import { DEFAULT_COMMITMENT, DEFAULT_FINALITY, MAYHEM_PROGRAM_ID } from '../pumpFun.consts.mjs';
@@ -51,21 +51,19 @@ class TradeModule {
     }
     async buildBuyIx(buyer, mint, amount, maxSolCost, tx, commitment, shouldUseBuyerAsBonding) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        // IMPORTANT: Bonding curve ATA uses legacy TOKEN_PROGRAM_ID
-        // Don't create it - it must already exist from token creation
-        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
-        TOKEN_PROGRAM_ID // Always legacy for bonding curve
-        );
-        // User ATA: Detect token program and just get the address (don't create here)
-        // The pump.fun program expects it to already exist
+        // Detect mint's token program to determine bonding curve ATA token program
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
             throw new Error(`Mint account not found: ${mint.toBase58()}`);
         }
-        const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+        const mintTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
             ? TOKEN_2022_PROGRAM_ID
             : TOKEN_PROGRAM_ID;
-        const associatedUser = await getAssociatedTokenAddress(mint, buyer, false, userTokenProgramId);
+        // Bonding curve ATA uses the same token program as the mint
+        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
+        mintTokenProgramId);
+        // User ATA also uses the mint's token program
+        const associatedUser = await getAssociatedTokenAddress(mint, buyer, false, mintTokenProgramId);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
         const bondingCreator = shouldUseBuyerAsBonding
@@ -190,21 +188,19 @@ class TradeModule {
     }
     async buildSellIx(seller, mint, tokenAmount, minSolOutput, tx, commitment) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        // IMPORTANT: Bonding curve ATA uses legacy TOKEN_PROGRAM_ID
-        // Don't create it - it must already exist from token creation
-        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
-        TOKEN_PROGRAM_ID // Always legacy for bonding curve
-        );
-        // User ATA: Detect token program and just get the address (don't create here)
-        // The pump.fun program expects it to already exist
+        // Detect mint's token program to determine bonding curve ATA token program
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
             throw new Error(`Mint account not found: ${mint.toBase58()}`);
         }
-        const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+        const mintTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
             ? TOKEN_2022_PROGRAM_ID
             : TOKEN_PROGRAM_ID;
-        const associatedUser = await getAssociatedTokenAddress(mint, seller, false, userTokenProgramId);
+        // Bonding curve ATA uses the same token program as the mint
+        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
+        mintTokenProgramId);
+        // User ATA also uses the mint's token program
+        const associatedUser = await getAssociatedTokenAddress(mint, seller, false, mintTokenProgramId);
         const globalPda = this.sdk.pda.getGlobalAccountPda();
         const globalBuf = await this.sdk.connection.getAccountInfo(globalPda, commitment);
         const feeRecipient = GlobalAccount.fromBuffer(globalBuf.data).feeRecipient;
