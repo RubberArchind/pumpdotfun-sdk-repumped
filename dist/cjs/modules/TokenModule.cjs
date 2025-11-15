@@ -74,7 +74,7 @@ class TokenModule {
             await splToken.getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
         catch (e) {
-            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
+            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId, splToken.ASSOCIATED_TOKEN_PROGRAM_ID));
         }
         return associatedTokenAccount;
     }
@@ -87,7 +87,7 @@ class TokenModule {
             await splToken.getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
         catch (e) {
-            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
+            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId, splToken.ASSOCIATED_TOKEN_PROGRAM_ID));
         }
         return associatedTokenAccount;
     }

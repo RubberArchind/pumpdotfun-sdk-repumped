@@ -1,4 +1,4 @@
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import { DEFAULT_COMMITMENT } from '../pumpFun.consts.mjs';
 import { BondingCurveAccount } from '../BondingCurveAccount.mjs';
@@ -72,7 +72,7 @@ class TokenModule {
             await getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
         catch (e) {
-            transaction.add(createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
+            transaction.add(createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId, ASSOCIATED_TOKEN_PROGRAM_ID));
         }
         return associatedTokenAccount;
     }
@@ -85,7 +85,7 @@ class TokenModule {
             await getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
         catch (e) {
-            transaction.add(createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
+            transaction.add(createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId, ASSOCIATED_TOKEN_PROGRAM_ID));
         }
         return associatedTokenAccount;
     }

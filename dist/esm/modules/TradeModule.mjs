@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { Transaction, PublicKey } from '@solana/web3.js';
 import { GlobalAccount } from '../GlobalAccount.mjs';
 import { DEFAULT_COMMITMENT, DEFAULT_FINALITY, MAYHEM_PROGRAM_ID } from '../pumpFun.consts.mjs';
@@ -56,9 +56,16 @@ class TradeModule {
         const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(buyer, bondingCurve, mint, tx, TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
         true, // allowOwnerOffCurve - bonding curve is a PDA
         commitment);
-        // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
-        const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, buyer, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
-        );
+        // User ATA: Detect token program and just get the address (don't create here)
+        // The pump.fun program expects it to already exist
+        const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
+        if (!mintAccount) {
+            throw new Error(`Mint account not found: ${mint.toBase58()}`);
+        }
+        const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+            ? TOKEN_2022_PROGRAM_ID
+            : TOKEN_PROGRAM_ID;
+        const associatedUser = await getAssociatedTokenAddress(mint, buyer, false, userTokenProgramId);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
         const bondingCreator = shouldUseBuyerAsBonding
@@ -188,9 +195,16 @@ class TradeModule {
         const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(seller, bondingCurve, mint, tx, TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
         true, // allowOwnerOffCurve - bonding curve is a PDA
         commitment);
-        // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
-        const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, seller, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
-        );
+        // User ATA: Detect token program and just get the address (don't create here)
+        // The pump.fun program expects it to already exist
+        const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
+        if (!mintAccount) {
+            throw new Error(`Mint account not found: ${mint.toBase58()}`);
+        }
+        const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+            ? TOKEN_2022_PROGRAM_ID
+            : TOKEN_PROGRAM_ID;
+        const associatedUser = await getAssociatedTokenAddress(mint, seller, false, userTokenProgramId);
         const globalPda = this.sdk.pda.getGlobalAccountPda();
         const globalBuf = await this.sdk.connection.getAccountInfo(globalPda, commitment);
         const feeRecipient = GlobalAccount.fromBuffer(globalBuf.data).feeRecipient;

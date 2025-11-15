@@ -4,6 +4,7 @@ import {
   getAssociatedTokenAddress,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { PublicKey, Transaction, Commitment } from "@solana/web3.js";
 import { DEFAULT_COMMITMENT } from "../pumpFun.consts.js";
@@ -105,7 +106,8 @@ export class TokenModule {
           associatedTokenAccount,
           owner,
           mint,
-          tokenProgramId
+          tokenProgramId,
+          ASSOCIATED_TOKEN_PROGRAM_ID
         )
       );
     }
@@ -141,7 +143,8 @@ export class TokenModule {
           associatedTokenAccount,
           owner,
           mint,
-          tokenProgramId
+          tokenProgramId,
+          ASSOCIATED_TOKEN_PROGRAM_ID
         )
       );
     }
