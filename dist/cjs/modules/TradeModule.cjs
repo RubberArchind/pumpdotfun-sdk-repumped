@@ -55,9 +55,9 @@ class TradeModule {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
         // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
         // The pump.fun program has tokenProgram hardcoded to legacy in the buy instruction
-        const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve - bonding curve is a PDA
-        splToken.TOKEN_PROGRAM_ID // Always use legacy token program for bonding curve
-        );
+        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(buyer, bondingCurve, mint, tx, splToken.TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
+        true, // allowOwnerOffCurve - bonding curve is a PDA
+        commitment);
         // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
         const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, buyer, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
         );
@@ -187,9 +187,9 @@ class TradeModule {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
         // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
         // The pump.fun program has tokenProgram hardcoded to legacy in the sell instruction
-        const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve - bonding curve is a PDA
-        splToken.TOKEN_PROGRAM_ID // Always use legacy token program for bonding curve
-        );
+        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(seller, bondingCurve, mint, tx, splToken.TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
+        true, // allowOwnerOffCurve - bonding curve is a PDA
+        commitment);
         // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
         const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, seller, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
         );

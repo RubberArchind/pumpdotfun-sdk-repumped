@@ -186,12 +186,16 @@ export class TradeModule {
     
     // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
     // The pump.fun program has tokenProgram hardcoded to legacy in the buy instruction
-    const associatedBonding = await getAssociatedTokenAddress(
-      mint,
-      bondingCurve,
-      true, // allowOwnerOffCurve - bonding curve is a PDA
-      TOKEN_PROGRAM_ID // Always use legacy token program for bonding curve
-    );
+    const associatedBonding = 
+      await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(
+        buyer,
+        bondingCurve,
+        mint,
+        tx,
+        TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
+        true, // allowOwnerOffCurve - bonding curve is a PDA
+        commitment
+      );
 
     // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
     const associatedUser =
@@ -414,12 +418,16 @@ export class TradeModule {
     
     // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
     // The pump.fun program has tokenProgram hardcoded to legacy in the sell instruction
-    const associatedBonding = await getAssociatedTokenAddress(
-      mint,
-      bondingCurve,
-      true, // allowOwnerOffCurve - bonding curve is a PDA
-      TOKEN_PROGRAM_ID // Always use legacy token program for bonding curve
-    );
+    const associatedBonding = 
+      await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(
+        seller,
+        bondingCurve,
+        mint,
+        tx,
+        TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
+        true, // allowOwnerOffCurve - bonding curve is a PDA
+        commitment
+      );
 
     // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
     const associatedUser =

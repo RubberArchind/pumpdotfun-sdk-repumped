@@ -78,6 +78,19 @@ class TokenModule {
         }
         return associatedTokenAccount;
     }
+    /**
+     * Create ATA with explicit token program (for cases where mint uses Token2022 but ATA must use legacy)
+     */
+    async createAssociatedTokenAccountIfNeededExplicit(payer, owner, mint, transaction, tokenProgramId, allowOwnerOffCurve = false, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
+        const associatedTokenAccount = await splToken.getAssociatedTokenAddress(mint, owner, allowOwnerOffCurve, tokenProgramId);
+        try {
+            await splToken.getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
+        }
+        catch (e) {
+            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
+        }
+        return associatedTokenAccount;
+    }
     async getBondingCurveAccount(mint, commitmentOrTokenProgram, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         // Handle overloaded parameters - if second param is PublicKey, it's tokenProgram
         let tokenProgram;

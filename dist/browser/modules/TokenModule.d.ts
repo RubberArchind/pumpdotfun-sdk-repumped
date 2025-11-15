@@ -9,6 +9,10 @@ export declare class TokenModule {
     constructor(sdk: PumpFunSDK);
     createTokenMetadata(create: CreateTokenMetadata): Promise<any>;
     createAssociatedTokenAccountIfNeeded(payer: PublicKey, owner: PublicKey, mint: PublicKey, transaction: Transaction, commitment?: Commitment, allowOwnerOffCurve?: boolean): Promise<PublicKey>;
+    /**
+     * Create ATA with explicit token program (for cases where mint uses Token2022 but ATA must use legacy)
+     */
+    createAssociatedTokenAccountIfNeededExplicit(payer: PublicKey, owner: PublicKey, mint: PublicKey, transaction: Transaction, tokenProgramId: PublicKey, allowOwnerOffCurve?: boolean, commitment?: Commitment): Promise<PublicKey>;
     getBondingCurveAccount(mint: PublicKey, commitmentOrTokenProgram?: Commitment | PublicKey, commitment?: Commitment): Promise<BondingCurveAccount | null>;
     getGlobalAccount(commitment?: Commitment): Promise<GlobalAccount>;
     getFeeConfig(commitment?: Commitment): Promise<FeeConfig>;
