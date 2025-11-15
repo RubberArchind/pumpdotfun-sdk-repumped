@@ -91,14 +91,17 @@ class BondingCurveAccount {
         return (this.virtualSolReserves * mintSupply) / this.virtualTokenReserves;
     }
     static fromBuffer(buffer) {
-        // Check buffer size to determine if it's old (81 bytes) or new (82 bytes) format
-        const isOldFormat = buffer.length === 81;
-        const isNewFormat = buffer.length === 82;
-        if (!isOldFormat && !isNewFormat) {
-            throw new Error(`Invalid BondingCurveAccount buffer size: ${buffer.length} (expected 81 or 82)`);
+        // The BondingCurve account has been expanded beyond the original 81/82 bytes
+        // We only need to read the first 81 or 82 bytes for the fields we care about
+        const minOldSize = 81; // 8 u64s + 1 bool + 32-byte pubkey = 73 bytes
+        const minNewSize = 82; // + 1 bool for isMayhemMode
+        if (buffer.length < minOldSize) {
+            throw new Error(`Invalid BondingCurveAccount buffer size: ${buffer.length} (expected at least ${minOldSize})`);
         }
-        // Use appropriate structure based on buffer size
-        const structure = isOldFormat
+        // Check if we have the mayhem mode field by looking at available data
+        const hasNewFields = buffer.length >= minNewSize;
+        // Use appropriate structure based on available data
+        const structure = hasNewFields
             ? borsh.struct([
                 borsh.u64("discriminator"),
                 borsh.u64("virtualTokenReserves"),
@@ -108,6 +111,7 @@ class BondingCurveAccount {
                 borsh.u64("tokenTotalSupply"),
                 borsh.bool("complete"),
                 borsh.publicKey("creator"),
+                borsh.bool("isMayhemMode"),
             ])
             : borsh.struct([
                 borsh.u64("discriminator"),
@@ -118,11 +122,11 @@ class BondingCurveAccount {
                 borsh.u64("tokenTotalSupply"),
                 borsh.bool("complete"),
                 borsh.publicKey("creator"),
-                borsh.bool("isMayhemMode"),
             ]);
-        let value = structure.decode(buffer);
-        return new BondingCurveAccount(BigInt(value.discriminator), BigInt(value.virtualTokenReserves), BigInt(value.virtualSolReserves), BigInt(value.realTokenReserves), BigInt(value.realSolReserves), BigInt(value.tokenTotalSupply), value.complete, value.creator, isOldFormat ? false : value.isMayhemMode // Old accounts are never mayhem mode
-        );
+        // Only decode the bytes we need (first 81 or 82 bytes)
+        const bytesToDecode = hasNewFields ? minNewSize : minOldSize;
+        let value = structure.decode(buffer.subarray(0, bytesToDecode));
+        return new BondingCurveAccount(BigInt(value.discriminator), BigInt(value.virtualTokenReserves), BigInt(value.virtualSolReserves), BigInt(value.realTokenReserves), BigInt(value.realSolReserves), BigInt(value.tokenTotalSupply), value.complete, value.creator, hasNewFields ? value.isMayhemMode : false);
     }
 }
 
