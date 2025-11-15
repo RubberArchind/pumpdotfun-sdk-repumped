@@ -37,13 +37,17 @@
     "prepare": "npm run build",
     "example": "npm run build && tsx example/index.ts",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && tsx test/integration.test.ts"
+    "test": "npm run build && tsx test/integration.test.ts",
+    "sell": "npm run build && tsx example/sellToken.ts",
+    "test:sell": "npm run build && tsx example/testSell.ts",
+    "fix:old-token": "npm run build && tsx example/fixOldToken.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "bn.js": "^5.2.2",
+    "bs58": "^6.0.0",
     "jito-ts": "^4.2.0"
   },
   "devDependencies": {
