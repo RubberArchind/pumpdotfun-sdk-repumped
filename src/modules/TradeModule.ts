@@ -184,29 +184,29 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
 
-    // CRITICAL: Bonding curve ATA ALWAYS uses legacy TOKEN_PROGRAM_ID
-    // This is hardcoded in pump.fun program even for Token2022 mints
-    const associatedBonding = await getAssociatedTokenAddress(
-      mint,
-      bondingCurve,
-      true, // allowOwnerOffCurve
-      TOKEN_PROGRAM_ID // ALWAYS legacy for bonding curve
-    );
-
-    // User ATA: Uses mint's actual token program (Token2022 or legacy)
+    // Detect mint's token program (Token2022 or legacy)
     const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
     if (!mintAccount) {
       throw new Error(`Mint account not found: ${mint.toBase58()}`);
     }
-    const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+    const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
       ? TOKEN_2022_PROGRAM_ID
       : TOKEN_PROGRAM_ID;
+
+    // Both bonding curve ATA and user ATA use the same token program as the mint
+    // This is determined by whether token was created with create (legacy) or createV2 (Token2022)
+    const associatedBonding = await getAssociatedTokenAddress(
+      mint,
+      bondingCurve,
+      true, // allowOwnerOffCurve
+      tokenProgramId
+    );
 
     const associatedUser = await getAssociatedTokenAddress(
       mint,
       buyer,
       false,
-      userTokenProgramId
+      tokenProgramId
     );
     const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
     const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
@@ -417,29 +417,29 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
 
-    // CRITICAL: Bonding curve ATA ALWAYS uses legacy TOKEN_PROGRAM_ID
-    // This is hardcoded in pump.fun program even for Token2022 mints
-    const associatedBonding = await getAssociatedTokenAddress(
-      mint,
-      bondingCurve,
-      true, // allowOwnerOffCurve
-      TOKEN_PROGRAM_ID // ALWAYS legacy for bonding curve
-    );
-
-    // User ATA: Uses mint's actual token program (Token2022 or legacy)
+    // Detect mint's token program (Token2022 or legacy)
     const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
     if (!mintAccount) {
       throw new Error(`Mint account not found: ${mint.toBase58()}`);
     }
-    const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+    const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
       ? TOKEN_2022_PROGRAM_ID
       : TOKEN_PROGRAM_ID;
+
+    // Both bonding curve ATA and user ATA use the same token program as the mint
+    // This is determined by whether token was created with create (legacy) or createV2 (Token2022)
+    const associatedBonding = await getAssociatedTokenAddress(
+      mint,
+      bondingCurve,
+      true, // allowOwnerOffCurve
+      tokenProgramId
+    );
 
     const associatedUser = await getAssociatedTokenAddress(
       mint,
       seller,
       false,
-      userTokenProgramId
+      tokenProgramId
     );
 
     const globalPda = this.sdk.pda.getGlobalAccountPda();
