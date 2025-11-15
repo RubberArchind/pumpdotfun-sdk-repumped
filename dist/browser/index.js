@@ -1,6 +1,6 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, SendTransactionError, TransactionMessage, VersionedTransaction, Transaction, ComputeBudgetProgram, SystemProgram } from '@solana/web3.js';
-import { getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction, TOKEN_2022_PROGRAM_ID as TOKEN_2022_PROGRAM_ID$1 } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID as TOKEN_2022_PROGRAM_ID$1, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import { struct, u64, bool, publicKey } from '@coral-xyz/borsh';
 import BN from 'bn.js';
 import { searcherClient } from 'jito-ts/dist/sdk/block-engine/searcher.js';
@@ -5236,12 +5236,21 @@ class TokenModule {
         }
     }
     async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = DEFAULT_COMMITMENT) {
-        const associatedTokenAccount = await getAssociatedTokenAddress(mint, owner, false);
+        // Detect which token program this mint uses
+        const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
+        if (!mintAccount) {
+            throw new Error(`Mint account not found: ${mint.toBase58()}`);
+        }
+        // Determine if this is a Token2022 mint by checking the owner
+        const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID$1)
+            ? TOKEN_2022_PROGRAM_ID$1
+            : TOKEN_PROGRAM_ID;
+        const associatedTokenAccount = await getAssociatedTokenAddress(mint, owner, false, tokenProgramId);
         try {
-            await getAccount(this.sdk.connection, associatedTokenAccount, commitment);
+            await getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
         catch (e) {
-            transaction.add(createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint));
+            transaction.add(createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
         }
         return associatedTokenAccount;
     }

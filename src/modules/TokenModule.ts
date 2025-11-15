@@ -2,6 +2,8 @@ import {
   createAssociatedTokenAccountInstruction,
   getAccount,
   getAssociatedTokenAddress,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { PublicKey, Transaction, Commitment } from "@solana/web3.js";
 import { DEFAULT_COMMITMENT } from "../pumpFun.consts.js";
@@ -75,21 +77,34 @@ export class TokenModule {
     transaction: Transaction,
     commitment: Commitment = DEFAULT_COMMITMENT
   ): Promise<PublicKey> {
+    // Detect which token program this mint uses
+    const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
+    if (!mintAccount) {
+      throw new Error(`Mint account not found: ${mint.toBase58()}`);
+    }
+    
+    // Determine if this is a Token2022 mint by checking the owner
+    const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
+      ? TOKEN_2022_PROGRAM_ID
+      : TOKEN_PROGRAM_ID;
+    
     const associatedTokenAccount = await getAssociatedTokenAddress(
       mint,
       owner,
-      false
+      false,
+      tokenProgramId
     );
 
     try {
-      await getAccount(this.sdk.connection, associatedTokenAccount, commitment);
+      await getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
     } catch (e) {
       transaction.add(
         createAssociatedTokenAccountInstruction(
           payer,
           associatedTokenAccount,
           owner,
-          mint
+          mint,
+          tokenProgramId
         )
       );
     }

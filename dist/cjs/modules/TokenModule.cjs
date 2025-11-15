@@ -60,12 +60,21 @@ class TokenModule {
         }
     }
     async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
-        const associatedTokenAccount = await splToken.getAssociatedTokenAddress(mint, owner, false);
+        // Detect which token program this mint uses
+        const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
+        if (!mintAccount) {
+            throw new Error(`Mint account not found: ${mint.toBase58()}`);
+        }
+        // Determine if this is a Token2022 mint by checking the owner
+        const tokenProgramId = mintAccount.owner.equals(splToken.TOKEN_2022_PROGRAM_ID)
+            ? splToken.TOKEN_2022_PROGRAM_ID
+            : splToken.TOKEN_PROGRAM_ID;
+        const associatedTokenAccount = await splToken.getAssociatedTokenAddress(mint, owner, false, tokenProgramId);
         try {
-            await splToken.getAccount(this.sdk.connection, associatedTokenAccount, commitment);
+            await splToken.getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
         catch (e) {
-            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint));
+            transaction.add(splToken.createAssociatedTokenAccountInstruction(payer, associatedTokenAccount, owner, mint, tokenProgramId));
         }
         return associatedTokenAccount;
     }
