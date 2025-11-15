@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { GLOBAL_ACCOUNT_SEED, EVENT_AUTHORITY_SEED, LEGACY_TOKEN_PROGRAM_ID, BONDING_CURVE_SEED, MINT_AUTHORITY_SEED, PUMP_PROGRAM_ID, PUMP_FEE_PROGRAM_ID, MPL_TOKEN_METADATA_PROGRAM_ID, METADATA_SEED, GLOBAL_VOLUME_SEED, USER_VOLUME_SEED, MAYHEM_STATE_SEED, MAYHEM_PROGRAM_ID, GLOBAL_PARAMS_SEED, SOL_VAULT_SEED } from '../pumpFun.consts.mjs';
+import { GLOBAL_ACCOUNT_SEED, EVENT_AUTHORITY_SEED, BONDING_CURVE_SEED, MINT_AUTHORITY_SEED, PUMP_PROGRAM_ID, PUMP_FEE_PROGRAM_ID, MPL_TOKEN_METADATA_PROGRAM_ID, METADATA_SEED, GLOBAL_VOLUME_SEED, USER_VOLUME_SEED, MAYHEM_STATE_SEED, MAYHEM_PROGRAM_ID, GLOBAL_PARAMS_SEED, SOL_VAULT_SEED } from '../pumpFun.consts.mjs';
 
 class PdaModule {
     sdk;
@@ -15,8 +15,10 @@ class PdaModule {
     getEventAuthorityPda() {
         return PublicKey.findProgramAddressSync([Buffer.from(EVENT_AUTHORITY_SEED)], this.sdk.program.programId)[0];
     }
-    getBondingCurvePDA(mint, tokenProgram = LEGACY_TOKEN_PROGRAM_ID) {
-        return PublicKey.findProgramAddressSync([Buffer.from(BONDING_CURVE_SEED), mint.toBuffer(), tokenProgram.toBuffer()], this.sdk.program.programId)[0];
+    getBondingCurvePDA(mint, tokenProgram) {
+        // Note: Despite documentation suggesting tokenProgram should be included in seeds,
+        // actual on-chain implementation uses only mint for both legacy and Token2022 tokens
+        return PublicKey.findProgramAddressSync([Buffer.from(BONDING_CURVE_SEED), mint.toBuffer()], this.sdk.program.programId)[0];
     }
     getMintAuthorityPDA() {
         return PublicKey.findProgramAddressSync([Buffer.from(MINT_AUTHORITY_SEED)], this.sdk.program.programId)[0];

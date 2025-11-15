@@ -5264,14 +5264,25 @@ class TokenModule {
         }
         return associatedTokenAccount;
     }
-    async getBondingCurveAccount(mint, commitment = DEFAULT_COMMITMENT) {
-        const tokenAccount = await this.sdk.connection.getAccountInfo(this.sdk.pda.getBondingCurvePDA(mint), commitment);
+    async getBondingCurveAccount(mint, commitmentOrTokenProgram, commitment = DEFAULT_COMMITMENT) {
+        // Handle overloaded parameters - if second param is PublicKey, it's tokenProgram
+        let tokenProgram;
+        let actualCommitment;
+        if (commitmentOrTokenProgram instanceof PublicKey) {
+            tokenProgram = commitmentOrTokenProgram;
+            actualCommitment = commitment;
+        }
+        else {
+            tokenProgram = undefined;
+            actualCommitment = commitmentOrTokenProgram || commitment;
+        }
+        const tokenAccount = await this.sdk.connection.getAccountInfo(this.sdk.pda.getBondingCurvePDA(mint, tokenProgram), actualCommitment);
         if (!tokenAccount) {
             return null;
         }
-        // Skip 8-byte Anchor discriminator
-        const accountData = tokenAccount.data.subarray(8);
-        return BondingCurveAccount.fromBuffer(accountData);
+        // Note: Bonding curve accounts do NOT have the 8-byte Anchor discriminator
+        // Parse the data directly without skipping bytes
+        return BondingCurveAccount.fromBuffer(tokenAccount.data);
     }
     async getGlobalAccount(commitment = DEFAULT_COMMITMENT) {
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
@@ -5619,8 +5630,10 @@ class PdaModule {
     getEventAuthorityPda() {
         return PublicKey.findProgramAddressSync([Buffer.from(EVENT_AUTHORITY_SEED)], this.sdk.program.programId)[0];
     }
-    getBondingCurvePDA(mint, tokenProgram = LEGACY_TOKEN_PROGRAM_ID) {
-        return PublicKey.findProgramAddressSync([Buffer.from(BONDING_CURVE_SEED), mint.toBuffer(), tokenProgram.toBuffer()], this.sdk.program.programId)[0];
+    getBondingCurvePDA(mint, tokenProgram) {
+        // Note: Despite documentation suggesting tokenProgram should be included in seeds,
+        // actual on-chain implementation uses only mint for both legacy and Token2022 tokens
+        return PublicKey.findProgramAddressSync([Buffer.from(BONDING_CURVE_SEED), mint.toBuffer()], this.sdk.program.programId)[0];
     }
     getMintAuthorityPDA() {
         return PublicKey.findProgramAddressSync([Buffer.from(MINT_AUTHORITY_SEED)], this.sdk.program.programId)[0];

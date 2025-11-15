@@ -99,18 +99,31 @@ export class TokenModule {
 
   async getBondingCurveAccount(
     mint: PublicKey,
+    commitmentOrTokenProgram?: Commitment | PublicKey,
     commitment: Commitment = DEFAULT_COMMITMENT
   ) {
+    // Handle overloaded parameters - if second param is PublicKey, it's tokenProgram
+    let tokenProgram: PublicKey | undefined;
+    let actualCommitment: Commitment;
+    
+    if (commitmentOrTokenProgram instanceof PublicKey) {
+      tokenProgram = commitmentOrTokenProgram;
+      actualCommitment = commitment;
+    } else {
+      tokenProgram = undefined;
+      actualCommitment = commitmentOrTokenProgram || commitment;
+    }
+    
     const tokenAccount = await this.sdk.connection.getAccountInfo(
-      this.sdk.pda.getBondingCurvePDA(mint),
-      commitment
+      this.sdk.pda.getBondingCurvePDA(mint, tokenProgram),
+      actualCommitment
     );
     if (!tokenAccount) {
       return null;
     }
-    // Skip 8-byte Anchor discriminator
-    const accountData = tokenAccount.data.subarray(8);
-    return BondingCurveAccount.fromBuffer(accountData);
+    // Note: Bonding curve accounts do NOT have the 8-byte Anchor discriminator
+    // Parse the data directly without skipping bytes
+    return BondingCurveAccount.fromBuffer(tokenAccount.data);
   }
 
   async getGlobalAccount(commitment: Commitment = DEFAULT_COMMITMENT) {

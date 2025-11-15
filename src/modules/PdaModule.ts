@@ -43,9 +43,11 @@ export class PdaModule {
     )[0];
   }
 
-  getBondingCurvePDA(mint: PublicKey, tokenProgram: PublicKey = LEGACY_TOKEN_PROGRAM_ID) {
+  getBondingCurvePDA(mint: PublicKey, tokenProgram?: PublicKey) {
+    // Note: Despite documentation suggesting tokenProgram should be included in seeds,
+    // actual on-chain implementation uses only mint for both legacy and Token2022 tokens
     return PublicKey.findProgramAddressSync(
-      [Buffer.from(BONDING_CURVE_SEED), mint.toBuffer(), tokenProgram.toBuffer()],
+      [Buffer.from(BONDING_CURVE_SEED), mint.toBuffer()],
       this.sdk.program.programId
     )[0];
   }

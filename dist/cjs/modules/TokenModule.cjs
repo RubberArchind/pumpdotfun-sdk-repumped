@@ -69,14 +69,25 @@ class TokenModule {
         }
         return associatedTokenAccount;
     }
-    async getBondingCurveAccount(mint, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
-        const tokenAccount = await this.sdk.connection.getAccountInfo(this.sdk.pda.getBondingCurvePDA(mint), commitment);
+    async getBondingCurveAccount(mint, commitmentOrTokenProgram, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
+        // Handle overloaded parameters - if second param is PublicKey, it's tokenProgram
+        let tokenProgram;
+        let actualCommitment;
+        if (commitmentOrTokenProgram instanceof web3_js.PublicKey) {
+            tokenProgram = commitmentOrTokenProgram;
+            actualCommitment = commitment;
+        }
+        else {
+            tokenProgram = undefined;
+            actualCommitment = commitmentOrTokenProgram || commitment;
+        }
+        const tokenAccount = await this.sdk.connection.getAccountInfo(this.sdk.pda.getBondingCurvePDA(mint, tokenProgram), actualCommitment);
         if (!tokenAccount) {
             return null;
         }
-        // Skip 8-byte Anchor discriminator
-        const accountData = tokenAccount.data.subarray(8);
-        return BondingCurveAccount.BondingCurveAccount.fromBuffer(accountData);
+        // Note: Bonding curve accounts do NOT have the 8-byte Anchor discriminator
+        // Parse the data directly without skipping bytes
+        return BondingCurveAccount.BondingCurveAccount.fromBuffer(tokenAccount.data);
     }
     async getGlobalAccount(commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
