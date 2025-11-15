@@ -67,32 +67,21 @@ export class GlobalAccount {
   }
 
   public static fromBuffer(buffer: Buffer): GlobalAccount {
-    // Check buffer size to determine if it's old (243 bytes) or new (244 bytes) format
-    const isOldFormat = buffer.length === 243;
-    const isNewFormat = buffer.length === 244;
+    // The Global account has been expanded significantly beyond the original 243/244 bytes
+    // We only need to read the first 243 or 244 bytes for the fields we care about
+    const minOldSize = 243;
+    const minNewSize = 244;
 
-    if (!isOldFormat && !isNewFormat) {
-      throw new Error(`Invalid GlobalAccount buffer size: ${buffer.length} (expected 243 or 244)`);
+    if (buffer.length < minOldSize) {
+      throw new Error(`Invalid GlobalAccount buffer size: ${buffer.length} (expected at least ${minOldSize})`);
     }
 
-    // Use appropriate structure based on buffer size
-    const structure: Layout<GlobalAccount> = isOldFormat
+    // Check if we have the new fields by looking at byte 243
+    const hasNewFields = buffer.length >= minNewSize;
+    
+    // Use appropriate structure based on available data
+    const structure: Layout<GlobalAccount> = hasNewFields
       ? struct([
-          u64("discriminator"),
-          bool("initialized"),
-          publicKey("authority"),
-          publicKey("feeRecipient"),
-          u64("initialVirtualTokenReserves"),
-          u64("initialVirtualSolReserves"),
-          u64("initialRealTokenReserves"),
-          u64("tokenTotalSupply"),
-          u64("feeBasisPoints"),
-          publicKey("withdrawAuthority"),
-          bool("enableMigrate"),
-          u64("poolMigrationFee"),
-          u64("creatorFeeBasisPoints"),
-        ])
-      : struct([
           u64("discriminator"),
           bool("initialized"),
           publicKey("authority"),
@@ -108,9 +97,27 @@ export class GlobalAccount {
           u64("creatorFeeBasisPoints"),
           publicKey("reservedFeeRecipient"),
           bool("mayhemModeEnabled"),
+        ])
+      : struct([
+          u64("discriminator"),
+          bool("initialized"),
+          publicKey("authority"),
+          publicKey("feeRecipient"),
+          u64("initialVirtualTokenReserves"),
+          u64("initialVirtualSolReserves"),
+          u64("initialRealTokenReserves"),
+          u64("tokenTotalSupply"),
+          u64("feeBasisPoints"),
+          publicKey("withdrawAuthority"),
+          bool("enableMigrate"),
+          u64("poolMigrationFee"),
+          u64("creatorFeeBasisPoints"),
         ]);
 
-    let value = structure.decode(buffer);
+    // Only decode the bytes we need (first 243 or 244 bytes)
+    const bytesToDecode = hasNewFields ? minNewSize : minOldSize;
+    let value = structure.decode(buffer.subarray(0, bytesToDecode));
+    
     return new GlobalAccount(
       BigInt(value.discriminator),
       value.initialized,
@@ -125,8 +132,8 @@ export class GlobalAccount {
       value.enableMigrate,
       BigInt(value.poolMigrationFee),
       BigInt(value.creatorFeeBasisPoints),
-      isOldFormat ? PublicKey.default : (value as any).reservedFeeRecipient,
-      isOldFormat ? false : (value as any).mayhemModeEnabled
+      hasNewFields ? (value as any).reservedFeeRecipient : PublicKey.default,
+      hasNewFields ? (value as any).mayhemModeEnabled : false
     );
   }
 }
