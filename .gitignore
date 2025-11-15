@@ -89,7 +89,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# dist  # Uncommented to publish built SDK to git
 
 # Gatsby files
 .cache/
