@@ -193,8 +193,7 @@ export class TradeModule {
       ? TOKEN_2022_PROGRAM_ID
       : TOKEN_PROGRAM_ID;
 
-    // Both bonding curve ATA and user ATA use the same token program as the mint
-    // This is determined by whether token was created with create (legacy) or createV2 (Token2022)
+    // Both bonding curve ATA and user ATA use the mint's token program
     const associatedBonding = await getAssociatedTokenAddress(
       mint,
       bondingCurve,
@@ -234,6 +233,7 @@ export class TradeModule {
         globalVolumeAccumulator: this.sdk.pda.getGlobalVolumeAccumulatorPda(),
         userVolumeAccumulator: this.sdk.pda.getUserVolumeAccumulatorPda(buyer),
         feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
+        tokenProgram: tokenProgramId,
       })
       .instruction();
 
@@ -426,8 +426,7 @@ export class TradeModule {
       ? TOKEN_2022_PROGRAM_ID
       : TOKEN_PROGRAM_ID;
 
-    // Both bonding curve ATA and user ATA use the same token program as the mint
-    // This is determined by whether token was created with create (legacy) or createV2 (Token2022)
+    // Both bonding curve ATA and user ATA use the mint's token program
     const associatedBonding = await getAssociatedTokenAddress(
       mint,
       bondingCurve,
@@ -470,6 +469,7 @@ export class TradeModule {
         creatorVault,
         eventAuthority,
         feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
+        tokenProgram: tokenProgramId,
       })
       .instruction();
 

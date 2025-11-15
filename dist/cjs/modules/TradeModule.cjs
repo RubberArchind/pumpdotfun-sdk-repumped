@@ -61,8 +61,7 @@ class TradeModule {
         const tokenProgramId = mintAccount.owner.equals(splToken.TOKEN_2022_PROGRAM_ID)
             ? splToken.TOKEN_2022_PROGRAM_ID
             : splToken.TOKEN_PROGRAM_ID;
-        // Both bonding curve ATA and user ATA use the same token program as the mint
-        // This is determined by whether token was created with create (legacy) or createV2 (Token2022)
+        // Both bonding curve ATA and user ATA use the mint's token program
         const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
         tokenProgramId);
         const associatedUser = await splToken.getAssociatedTokenAddress(mint, buyer, false, tokenProgramId);
@@ -90,6 +89,7 @@ class TradeModule {
             globalVolumeAccumulator: this.sdk.pda.getGlobalVolumeAccumulatorPda(),
             userVolumeAccumulator: this.sdk.pda.getUserVolumeAccumulatorPda(buyer),
             feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
+            tokenProgram: tokenProgramId,
         })
             .instruction();
         tx.add(ix);
@@ -198,8 +198,7 @@ class TradeModule {
         const tokenProgramId = mintAccount.owner.equals(splToken.TOKEN_2022_PROGRAM_ID)
             ? splToken.TOKEN_2022_PROGRAM_ID
             : splToken.TOKEN_PROGRAM_ID;
-        // Both bonding curve ATA and user ATA use the same token program as the mint
-        // This is determined by whether token was created with create (legacy) or createV2 (Token2022)
+        // Both bonding curve ATA and user ATA use the mint's token program
         const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
         tokenProgramId);
         const associatedUser = await splToken.getAssociatedTokenAddress(mint, seller, false, tokenProgramId);
@@ -222,6 +221,7 @@ class TradeModule {
             creatorVault,
             eventAuthority,
             feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
+            tokenProgram: tokenProgramId,
         })
             .instruction();
         tx.add(ix);
