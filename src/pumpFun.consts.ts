@@ -11,6 +11,26 @@ export const METADATA_SEED = "metadata";
 export const EVENT_AUTHORITY_SEED = "__event_authority";
 export const GLOBAL_VOLUME_SEED = "global_volume_accumulator";
 export const USER_VOLUME_SEED = "user_volume_accumulator";
+
+// Mayhem mode constants (Breaking change Nov 11, 2025)
+export const MAYHEM_PROGRAM_ID = new PublicKey(
+  "MAyhSmzXzV1pTf7LsNkrNwkWKTo4ougAJ1PPg47MD4e"
+);
+export const MAYHEM_FEE_RECIPIENT = new PublicKey(
+  "GesfTA3X2arioaHp8bbKdjG9vJtskViWACZoYvxp4twS"
+);
+export const MAYHEM_STATE_SEED = "mayhem-state";
+export const GLOBAL_PARAMS_SEED = "global-params";
+export const SOL_VAULT_SEED = "sol-vault";
+
+// Token program constants
+export const TOKEN_2022_PROGRAM_ID = new PublicKey(
+  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+);
+export const LEGACY_TOKEN_PROGRAM_ID = new PublicKey(
+  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+);
+
 export const PUMP_PROGRAM_ID = new PublicKey(
   "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
 );

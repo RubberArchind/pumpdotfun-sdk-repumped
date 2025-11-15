@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import {
   Keypair,
   Commitment,
@@ -9,7 +9,11 @@ import {
 } from "@solana/web3.js";
 import { GlobalAccount } from "../GlobalAccount.js";
 
-import { DEFAULT_COMMITMENT, DEFAULT_FINALITY } from "../pumpFun.consts.js";
+import { 
+  DEFAULT_COMMITMENT, 
+  DEFAULT_FINALITY,
+  MAYHEM_PROGRAM_ID,
+} from "../pumpFun.consts.js";
 import {
   CreateTokenMetadata,
   PriorityFee,
@@ -225,7 +229,7 @@ export class TradeModule {
     tx.add(ix);
   }
 
-  //create token instructions
+  //create token instructions (legacy - uses Metaplex metadata)
   async getCreateInstructions(
     creator: PublicKey,
     name: string,
@@ -259,6 +263,137 @@ export class TradeModule {
       .instruction();
 
     return new Transaction().add(ix);
+  }
+
+  /**
+   * Create token instructions using Token2022 and mayhem mode support
+   * Breaking change introduced Nov 11, 2025
+   * @param creator Creator public key
+   * @param name Token name
+   * @param symbol Token symbol
+   * @param uri Metadata URI
+   * @param mint Mint keypair
+   * @param isMayhemMode Enable mayhem mode (uses different fee recipient)
+   * @returns Transaction with createV2 instruction
+   */
+  async getCreateV2Instructions(
+    creator: PublicKey,
+    name: string,
+    symbol: string,
+    uri: string,
+    mint: Keypair,
+    isMayhemMode: boolean = false
+  ): Promise<Transaction> {
+    const mintAuthority = this.sdk.pda.getMintAuthorityPDA();
+    const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint.publicKey);
+    
+    // Use Token2022 for associated token account
+    const associatedBonding = await getAssociatedTokenAddress(
+      mint.publicKey,
+      bondingCurve,
+      true,
+      TOKEN_2022_PROGRAM_ID
+    );
+    
+    const global = this.sdk.pda.getGlobalAccountPda();
+    const eventAuthority = this.sdk.pda.getEventAuthorityPda();
+
+    // Mayhem mode accounts (indices 10-14)
+    const mayhemProgramId = MAYHEM_PROGRAM_ID;
+    const globalParams = this.sdk.pda.getGlobalParamsPda();
+    const solVault = this.sdk.pda.getSolVaultPda();
+    const mayhemState = this.sdk.pda.getMayhemStatePda(mint.publicKey);
+    const mayhemTokenVault = this.sdk.pda.getMayhemTokenVaultPda(mint.publicKey);
+
+    const ix = await this.sdk.program.methods
+      .createV2(name, symbol, uri, creator, isMayhemMode)
+      .accounts({
+        mint: mint.publicKey,
+        mintAuthority,
+        bondingCurve,
+        associatedBondingCurve: associatedBonding,
+        global,
+        user: creator,
+        systemProgram: PublicKey.default, // Will be set by Anchor
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+        mayhemProgramId,
+        globalParams,
+        solVault,
+        mayhemState,
+        mayhemTokenVault,
+        eventAuthority,
+      })
+      .instruction();
+
+    return new Transaction().add(ix);
+  }
+
+  /**
+   * Create and buy using Token2022 with optional mayhem mode
+   * @param creator Creator keypair
+   * @param mint Mint keypair
+   * @param metadata Token metadata
+   * @param buyAmountSol Amount of SOL to spend on initial buy
+   * @param isMayhemMode Enable mayhem mode
+   * @param slippageBasisPoints Slippage tolerance in basis points
+   * @param priorityFees Priority fees configuration
+   * @param commitment Commitment level
+   * @param finality Finality level
+   * @returns Transaction result
+   */
+  async createAndBuyV2(
+    creator: Keypair,
+    mint: Keypair,
+    metadata: CreateTokenMetadata,
+    buyAmountSol: bigint,
+    isMayhemMode: boolean = false,
+    slippageBasisPoints: bigint = 500n,
+    priorityFees?: PriorityFee,
+    commitment: Commitment = DEFAULT_COMMITMENT,
+    finality: Finality = DEFAULT_FINALITY
+  ): Promise<TransactionResult> {
+    const tokenMetadata = await this.sdk.token.createTokenMetadata(metadata);
+
+    const createIx = await this.getCreateV2Instructions(
+      creator.publicKey,
+      metadata.name,
+      metadata.symbol,
+      tokenMetadata.metadataUri,
+      mint,
+      isMayhemMode
+    );
+
+    const transaction = new Transaction().add(createIx);
+
+    if (buyAmountSol > 0n) {
+      const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
+      const buyAmount = globalAccount.getInitialBuyPrice(buyAmountSol);
+      const buyAmountWithSlippage = calculateWithSlippageBuy(
+        buyAmountSol,
+        slippageBasisPoints
+      );
+
+      await this.buildBuyIx(
+        creator.publicKey,
+        mint.publicKey,
+        buyAmount,
+        buyAmountWithSlippage,
+        transaction,
+        commitment,
+        true
+      );
+    }
+
+    return await sendTx(
+      this.sdk.connection,
+      transaction,
+      creator.publicKey,
+      [creator, mint],
+      priorityFees,
+      commitment,
+      finality
+    );
   }
 
   async buildSellIx(

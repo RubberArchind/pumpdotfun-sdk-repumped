@@ -12,6 +12,7 @@ export class BondingCurveAccount {
   public tokenTotalSupply: bigint;
   public complete: boolean;
   public creator: PublicKey;
+  public isMayhemMode: boolean;
 
   constructor(
     discriminator: bigint,
@@ -21,7 +22,8 @@ export class BondingCurveAccount {
     realSolReserves: bigint,
     tokenTotalSupply: bigint,
     complete: boolean,
-    creator: PublicKey
+    creator: PublicKey,
+    isMayhemMode: boolean = false
   ) {
     this.discriminator = discriminator;
     this.virtualTokenReserves = virtualTokenReserves;
@@ -31,6 +33,7 @@ export class BondingCurveAccount {
     this.tokenTotalSupply = tokenTotalSupply;
     this.complete = complete;
     this.creator = creator;
+    this.isMayhemMode = isMayhemMode;
   }
 
   getBuyPrice(
@@ -153,6 +156,7 @@ export class BondingCurveAccount {
       u64("tokenTotalSupply"),
       bool("complete"),
       publicKey("creator"),
+      bool("isMayhemMode"),
     ]);
 
     let value = structure.decode(buffer);
@@ -164,7 +168,8 @@ export class BondingCurveAccount {
       BigInt(value.realSolReserves),
       BigInt(value.tokenTotalSupply),
       value.complete,
-      value.creator
+      value.creator,
+      value.isMayhemMode
     );
   }
 }

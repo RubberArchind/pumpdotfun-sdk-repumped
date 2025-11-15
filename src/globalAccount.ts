@@ -15,6 +15,8 @@ export class GlobalAccount {
   public enableMigrate: boolean = false;
   public poolMigrationFee: bigint;
   public creatorFeeBasisPoints: bigint;
+  public reservedFeeRecipient: PublicKey;
+  public mayhemModeEnabled: boolean = false;
 
   constructor(
     discriminator: bigint,
@@ -29,7 +31,9 @@ export class GlobalAccount {
     withdrawAuthority: PublicKey,
     enableMigrate: boolean,
     poolMigrationFee: bigint,
-    creatorFeeBasisPoints: bigint
+    creatorFeeBasisPoints: bigint,
+    reservedFeeRecipient?: PublicKey,
+    mayhemModeEnabled: boolean = false
   ) {
     this.discriminator = discriminator;
     this.initialized = initialized;
@@ -44,6 +48,8 @@ export class GlobalAccount {
     this.enableMigrate = enableMigrate;
     this.poolMigrationFee = poolMigrationFee;
     this.creatorFeeBasisPoints = creatorFeeBasisPoints;
+    this.reservedFeeRecipient = reservedFeeRecipient || PublicKey.default;
+    this.mayhemModeEnabled = mayhemModeEnabled;
   }
 
   getInitialBuyPrice(amount: bigint): bigint {
@@ -75,6 +81,8 @@ export class GlobalAccount {
       bool("enableMigrate"),
       u64("poolMigrationFee"),
       u64("creatorFeeBasisPoints"),
+      publicKey("reservedFeeRecipient"),
+      bool("mayhemModeEnabled"),
     ]);
 
     let value = structure.decode(buffer);
@@ -91,7 +99,9 @@ export class GlobalAccount {
       value.withdrawAuthority,
       value.enableMigrate,
       BigInt(value.poolMigrationFee),
-      BigInt(value.creatorFeeBasisPoints)
+      BigInt(value.creatorFeeBasisPoints),
+      value.reservedFeeRecipient,
+      value.mayhemModeEnabled
     );
   }
 }

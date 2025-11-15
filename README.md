@@ -16,7 +16,12 @@
 > ✅ Added support for new events  
 > ✅ Added Jito and alternative relay support (Astra, 0Slot, NodeOne, NextBlock)  
 > ✅ Works on **devnet** and **mainnet-beta**  
-> ✅ ESM & CJS builds via Rollup in **`dist/`**
+> ✅ ESM & CJS builds via Rollup in **`dist/`**  
+> ✅ **NEW:** Token2022 & Mayhem Mode support (Nov 2025 breaking changes)
+
+---
+
+> **⚠️ BREAKING CHANGES (Nov 11, 2025):** pump.fun introduced Token2022 support and Mayhem Mode. This SDK has been updated to support both the new `createV2` instruction and legacy token creation. See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for details.
 
 ---
 
@@ -32,9 +37,9 @@
 | Module                | Highlights                                                                                          |
 | --------------------- | --------------------------------------------------------------------------------------------------- |
 | **`PumpFunSDK`**      | Entry point. Wraps Anchor `Program` & `Connection` and initializes all submodules.                  |
-| **`TradeModule`**     | `createAndBuy`, `buy`, `sell`, tx builders, slippage helpers                                        |
+| **`TradeModule`**     | `createAndBuy`, `createAndBuyV2` (Token2022), `buy`, `sell`, tx builders, slippage helpers         |
 | **`TokenModule`**     | Token metadata, ATA creation, mint helpers                                                          |
-| **`PdaModule`**       | PDA helpers: global, event-authority, bonding-curve, metadata, etc.                                 |
+| **`PdaModule`**       | PDA helpers: global, bonding-curve, metadata, mayhem-state, etc.                                    |
 | **`EventModule`**     | Typed Anchor event listeners with automatic deserialization                                         |
 | **`JitoModule`**      | Submit Jito bundles for `buy`/`sell`. Requires `jitoUrl` and `authKeypair` in SDK options           |
 | **`AstraModule`**     | Sends `buy`/`sell` transactions via Astra relays. Adds tip transfers + optional `ping()` keep-alive |
