@@ -1,29 +1,31 @@
-import BN from 'bn.js';
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
-import { Transaction, PublicKey } from '@solana/web3.js';
-import { GlobalAccount } from '../GlobalAccount.mjs';
-import { DEFAULT_COMMITMENT, DEFAULT_FINALITY, MAYHEM_PROGRAM_ID } from '../pumpFun.consts.mjs';
-import { calculateWithSlippageBuy, calculateWithSlippageSell } from '../slippage.mjs';
-import { sendTx } from '../tx.mjs';
+'use strict';
+
+var BN = require('bn.js');
+var splToken = require('@solana/spl-token');
+var web3_js = require('@solana/web3.js');
+var GlobalAccount = require('../GlobalAccount.cjs');
+var pumpFun_consts = require('../pumpFun.consts.cjs');
+var slippage = require('../slippage.cjs');
+var tx = require('../tx.cjs');
 
 class TradeModule {
     sdk;
     constructor(sdk) {
         this.sdk = sdk;
     }
-    async createAndBuy(creator, mint, metadata, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
+    async createAndBuy(creator, mint, metadata, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = pumpFun_consts.DEFAULT_COMMITMENT, finality = pumpFun_consts.DEFAULT_FINALITY) {
         const tokenMetadata = await this.sdk.token.createTokenMetadata(metadata);
         const createIx = await this.getCreateInstructions(creator.publicKey, metadata.name, metadata.symbol, tokenMetadata.metadataUri, mint);
-        const transaction = new Transaction().add(createIx);
+        const transaction = new web3_js.Transaction().add(createIx);
         if (buyAmountSol > 0n) {
             const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
             const buyAmount = globalAccount.getInitialBuyPrice(buyAmountSol);
-            const buyAmountWithSlippage = calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
+            const buyAmountWithSlippage = slippage.calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
             await this.buildBuyIx(creator.publicKey, mint.publicKey, buyAmount, buyAmountWithSlippage, transaction, commitment, true);
         }
-        return await sendTx(this.sdk.connection, transaction, creator.publicKey, [creator, mint], priorityFees, commitment, finality);
+        return await tx.sendTx(this.sdk.connection, transaction, creator.publicKey, [creator, mint], priorityFees, commitment, finality);
     }
-    async buy(buyer, mint, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
+    async buy(buyer, mint, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = pumpFun_consts.DEFAULT_COMMITMENT, finality = pumpFun_consts.DEFAULT_FINALITY) {
         const bondingAccount = await this.sdk.token.getBondingCurveAccount(mint, commitment);
         if (!bondingAccount) {
             throw new Error(`Bonding curve account not found: ${mint.toBase58()}`);
@@ -31,12 +33,12 @@ class TradeModule {
         const feeConfig = await this.sdk.token.getFeeConfig(commitment);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const buyAmount = bondingAccount.getBuyPrice(globalAccount, feeConfig, buyAmountSol);
-        const buyAmountWithSlippage = calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
-        const transaction = new Transaction();
+        const buyAmountWithSlippage = slippage.calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
+        const transaction = new web3_js.Transaction();
         await this.buildBuyIx(buyer.publicKey, mint, buyAmount, buyAmountWithSlippage, transaction, commitment, false);
-        return await sendTx(this.sdk.connection, transaction, buyer.publicKey, [buyer], priorityFees, commitment, finality);
+        return await tx.sendTx(this.sdk.connection, transaction, buyer.publicKey, [buyer], priorityFees, commitment, finality);
     }
-    async getBuyInstructionsBySolAmount(buyer, mint, buyAmountSol, slippageBasisPoints = 500n, commitment = DEFAULT_COMMITMENT) {
+    async getBuyInstructionsBySolAmount(buyer, mint, buyAmountSol, slippageBasisPoints = 500n, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const bondingCurveAccount = await this.sdk.token.getBondingCurveAccount(mint, commitment);
         if (!bondingCurveAccount) {
             throw new Error(`Bonding curve account not found: ${mint.toBase58()}`);
@@ -44,8 +46,8 @@ class TradeModule {
         const feeConfig = await this.sdk.token.getFeeConfig(commitment);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const buyAmount = bondingCurveAccount.getBuyPrice(globalAccount, feeConfig, buyAmountSol);
-        const buyAmountWithSlippage = calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
-        const transaction = new Transaction();
+        const buyAmountWithSlippage = slippage.calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
+        const transaction = new web3_js.Transaction();
         await this.buildBuyIx(buyer, mint, buyAmount, buyAmountWithSlippage, transaction, commitment, false);
         return transaction;
     }
@@ -53,18 +55,18 @@ class TradeModule {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
         // CRITICAL: Bonding curve ATA ALWAYS uses legacy TOKEN_PROGRAM_ID
         // This is hardcoded in pump.fun program even for Token2022 mints
-        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
-        TOKEN_PROGRAM_ID // ALWAYS legacy for bonding curve
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
+        splToken.TOKEN_PROGRAM_ID // ALWAYS legacy for bonding curve
         );
         // User ATA: Uses mint's actual token program (Token2022 or legacy)
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
             throw new Error(`Mint account not found: ${mint.toBase58()}`);
         }
-        const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
-            ? TOKEN_2022_PROGRAM_ID
-            : TOKEN_PROGRAM_ID;
-        const associatedUser = await getAssociatedTokenAddress(mint, buyer, false, userTokenProgramId);
+        const userTokenProgramId = mintAccount.owner.equals(splToken.TOKEN_2022_PROGRAM_ID)
+            ? splToken.TOKEN_2022_PROGRAM_ID
+            : splToken.TOKEN_PROGRAM_ID;
+        const associatedUser = await splToken.getAssociatedTokenAddress(mint, buyer, false, userTokenProgramId);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
         const bondingCreator = shouldUseBuyerAsBonding
@@ -97,7 +99,7 @@ class TradeModule {
     async getCreateInstructions(creator, name, symbol, uri, mint) {
         const mintAuthority = this.sdk.pda.getMintAuthorityPDA();
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint.publicKey);
-        const associatedBonding = await getAssociatedTokenAddress(mint.publicKey, bondingCurve, true);
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint.publicKey, bondingCurve, true);
         const global = this.sdk.pda.getGlobalAccountPda();
         const metadata = this.sdk.pda.getMetadataPDA(mint.publicKey);
         const eventAuthority = this.sdk.pda.getEventAuthorityPda();
@@ -114,7 +116,7 @@ class TradeModule {
             eventAuthority,
         })
             .instruction();
-        return new Transaction().add(ix);
+        return new web3_js.Transaction().add(ix);
     }
     /**
      * Create token instructions using Token2022 and mayhem mode support
@@ -131,11 +133,11 @@ class TradeModule {
         const mintAuthority = this.sdk.pda.getMintAuthorityPDA();
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint.publicKey);
         // Use Token2022 for associated token account
-        const associatedBonding = await getAssociatedTokenAddress(mint.publicKey, bondingCurve, true, TOKEN_2022_PROGRAM_ID);
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint.publicKey, bondingCurve, true, splToken.TOKEN_2022_PROGRAM_ID);
         const global = this.sdk.pda.getGlobalAccountPda();
         const eventAuthority = this.sdk.pda.getEventAuthorityPda();
         // Mayhem mode accounts (indices 10-14)
-        const mayhemProgramId = MAYHEM_PROGRAM_ID;
+        const mayhemProgramId = pumpFun_consts.MAYHEM_PROGRAM_ID;
         const globalParams = this.sdk.pda.getGlobalParamsPda();
         const solVault = this.sdk.pda.getSolVaultPda();
         const mayhemState = this.sdk.pda.getMayhemStatePda(mint.publicKey);
@@ -149,9 +151,9 @@ class TradeModule {
             associatedBondingCurve: associatedBonding,
             global,
             user: creator,
-            systemProgram: PublicKey.default, // Will be set by Anchor
-            tokenProgram: TOKEN_2022_PROGRAM_ID,
-            associatedTokenProgram: new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            systemProgram: web3_js.PublicKey.default, // Will be set by Anchor
+            tokenProgram: splToken.TOKEN_2022_PROGRAM_ID,
+            associatedTokenProgram: new web3_js.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             mayhemProgramId,
             globalParams,
             solVault,
@@ -160,7 +162,7 @@ class TradeModule {
             eventAuthority,
         })
             .instruction();
-        return new Transaction().add(ix);
+        return new web3_js.Transaction().add(ix);
     }
     /**
      * Create and buy using Token2022 with optional mayhem mode
@@ -175,37 +177,37 @@ class TradeModule {
      * @param finality Finality level
      * @returns Transaction result
      */
-    async createAndBuyV2(creator, mint, metadata, buyAmountSol, isMayhemMode = false, slippageBasisPoints = 500n, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
+    async createAndBuyV2(creator, mint, metadata, buyAmountSol, isMayhemMode = false, slippageBasisPoints = 500n, priorityFees, commitment = pumpFun_consts.DEFAULT_COMMITMENT, finality = pumpFun_consts.DEFAULT_FINALITY) {
         const tokenMetadata = await this.sdk.token.createTokenMetadata(metadata);
         const createIx = await this.getCreateV2Instructions(creator.publicKey, metadata.name, metadata.symbol, tokenMetadata.metadataUri, mint, isMayhemMode);
-        const transaction = new Transaction().add(createIx);
+        const transaction = new web3_js.Transaction().add(createIx);
         if (buyAmountSol > 0n) {
             const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
             const buyAmount = globalAccount.getInitialBuyPrice(buyAmountSol);
-            const buyAmountWithSlippage = calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
+            const buyAmountWithSlippage = slippage.calculateWithSlippageBuy(buyAmountSol, slippageBasisPoints);
             await this.buildBuyIx(creator.publicKey, mint.publicKey, buyAmount, buyAmountWithSlippage, transaction, commitment, true);
         }
-        return await sendTx(this.sdk.connection, transaction, creator.publicKey, [creator, mint], priorityFees, commitment, finality);
+        return await tx.sendTx(this.sdk.connection, transaction, creator.publicKey, [creator, mint], priorityFees, commitment, finality);
     }
     async buildSellIx(seller, mint, tokenAmount, minSolOutput, tx, commitment) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
         // CRITICAL: Bonding curve ATA ALWAYS uses legacy TOKEN_PROGRAM_ID
         // This is hardcoded in pump.fun program even for Token2022 mints
-        const associatedBonding = await getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
-        TOKEN_PROGRAM_ID // ALWAYS legacy for bonding curve
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve
+        splToken.TOKEN_PROGRAM_ID // ALWAYS legacy for bonding curve
         );
         // User ATA: Uses mint's actual token program (Token2022 or legacy)
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
             throw new Error(`Mint account not found: ${mint.toBase58()}`);
         }
-        const userTokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
-            ? TOKEN_2022_PROGRAM_ID
-            : TOKEN_PROGRAM_ID;
-        const associatedUser = await getAssociatedTokenAddress(mint, seller, false, userTokenProgramId);
+        const userTokenProgramId = mintAccount.owner.equals(splToken.TOKEN_2022_PROGRAM_ID)
+            ? splToken.TOKEN_2022_PROGRAM_ID
+            : splToken.TOKEN_PROGRAM_ID;
+        const associatedUser = await splToken.getAssociatedTokenAddress(mint, seller, false, userTokenProgramId);
         const globalPda = this.sdk.pda.getGlobalAccountPda();
         const globalBuf = await this.sdk.connection.getAccountInfo(globalPda, commitment);
-        const feeRecipient = GlobalAccount.fromBuffer(globalBuf.data).feeRecipient;
+        const feeRecipient = GlobalAccount.GlobalAccount.fromBuffer(globalBuf.data).feeRecipient;
         const bondingCreator = await this.sdk.token.getBondingCurveCreator(bondingCurve, commitment);
         const creatorVault = this.sdk.pda.getCreatorVaultPda(bondingCreator);
         const eventAuthority = this.sdk.pda.getEventAuthorityPda();
@@ -226,35 +228,35 @@ class TradeModule {
             .instruction();
         tx.add(ix);
     }
-    async sell(seller, mint, sellTokenAmount, slippageBasisPoints = 500n, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
+    async sell(seller, mint, sellTokenAmount, slippageBasisPoints = 500n, priorityFees, commitment = pumpFun_consts.DEFAULT_COMMITMENT, finality = pumpFun_consts.DEFAULT_FINALITY) {
         const bondingAccount = await this.sdk.token.getBondingCurveAccount(mint, commitment);
         if (!bondingAccount)
             throw new Error(`Bonding curve account not found: ${mint.toBase58()}`);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const feeConfig = await this.sdk.token.getFeeConfig(commitment);
         const minSolOutput = bondingAccount.getSellPrice(globalAccount, feeConfig, sellTokenAmount);
-        let sellAmountWithSlippage = calculateWithSlippageSell(minSolOutput, slippageBasisPoints);
+        let sellAmountWithSlippage = slippage.calculateWithSlippageSell(minSolOutput, slippageBasisPoints);
         if (sellAmountWithSlippage < 1n)
             sellAmountWithSlippage = 1n;
-        const transaction = new Transaction();
+        const transaction = new web3_js.Transaction();
         await this.buildSellIx(seller.publicKey, mint, sellTokenAmount, sellAmountWithSlippage, transaction, commitment);
-        return await sendTx(this.sdk.connection, transaction, seller.publicKey, [seller], priorityFees, commitment, finality);
+        return await tx.sendTx(this.sdk.connection, transaction, seller.publicKey, [seller], priorityFees, commitment, finality);
     }
-    async getSellInstructionsByTokenAmount(seller, mint, sellTokenAmount, slippageBasisPoints = 500n, commitment = DEFAULT_COMMITMENT) {
+    async getSellInstructionsByTokenAmount(seller, mint, sellTokenAmount, slippageBasisPoints = 500n, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const bondingAccount = await this.sdk.token.getBondingCurveAccount(mint, commitment);
         if (!bondingAccount)
             throw new Error(`Bonding curve account not found: ${mint.toBase58()}`);
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const feeConfig = await this.sdk.token.getFeeConfig(commitment);
         const minSolOutput = bondingAccount.getSellPrice(globalAccount, feeConfig, sellTokenAmount);
-        let sellAmountWithSlippage = calculateWithSlippageSell(minSolOutput, slippageBasisPoints);
+        let sellAmountWithSlippage = slippage.calculateWithSlippageSell(minSolOutput, slippageBasisPoints);
         if (sellAmountWithSlippage < 1n)
             sellAmountWithSlippage = 1n;
-        const transaction = new Transaction();
+        const transaction = new web3_js.Transaction();
         await this.buildSellIx(seller, mint, sellTokenAmount, sellAmountWithSlippage, transaction, commitment);
         return transaction;
     }
 }
 
-export { TradeModule };
-//# sourceMappingURL=TradeModule.mjs.map
+exports.TradeModule = TradeModule;
+//# sourceMappingURL=TradeModule.cjs.map
