@@ -184,18 +184,14 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
     
-    // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
-    // The pump.fun program has tokenProgram hardcoded to legacy in the buy instruction
-    const associatedBonding = 
-      await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(
-        buyer,
-        bondingCurve,
-        mint,
-        tx,
-        TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
-        true, // allowOwnerOffCurve - bonding curve is a PDA
-        commitment
-      );
+    // IMPORTANT: Bonding curve ATA uses legacy TOKEN_PROGRAM_ID
+    // Don't create it - it must already exist from token creation
+    const associatedBonding = await getAssociatedTokenAddress(
+      mint,
+      bondingCurve,
+      true, // allowOwnerOffCurve
+      TOKEN_PROGRAM_ID // Always legacy for bonding curve
+    );
 
     // User ATA: Detect token program and just get the address (don't create here)
     // The pump.fun program expects it to already exist
@@ -422,18 +418,14 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
     
-    // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
-    // The pump.fun program has tokenProgram hardcoded to legacy in the sell instruction
-    const associatedBonding = 
-      await this.sdk.token.createAssociatedTokenAccountIfNeededExplicit(
-        seller,
-        bondingCurve,
-        mint,
-        tx,
-        TOKEN_PROGRAM_ID, // Always use legacy token program for bonding curve
-        true, // allowOwnerOffCurve - bonding curve is a PDA
-        commitment
-      );
+    // IMPORTANT: Bonding curve ATA uses legacy TOKEN_PROGRAM_ID
+    // Don't create it - it must already exist from token creation
+    const associatedBonding = await getAssociatedTokenAddress(
+      mint,
+      bondingCurve,
+      true, // allowOwnerOffCurve
+      TOKEN_PROGRAM_ID // Always legacy for bonding curve
+    );
 
     // User ATA: Detect token program and just get the address (don't create here)
     // The pump.fun program expects it to already exist
