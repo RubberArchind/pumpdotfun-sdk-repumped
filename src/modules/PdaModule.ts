@@ -14,6 +14,8 @@ import {
   MAYHEM_STATE_SEED,
   GLOBAL_PARAMS_SEED,
   SOL_VAULT_SEED,
+  TOKEN_2022_PROGRAM_ID,
+  LEGACY_TOKEN_PROGRAM_ID,
 } from "../pumpFun.consts.js";
 import { PumpFunSDK } from "../PumpFunSDK.js";
 
@@ -41,9 +43,9 @@ export class PdaModule {
     )[0];
   }
 
-  getBondingCurvePDA(mint: PublicKey) {
+  getBondingCurvePDA(mint: PublicKey, tokenProgram: PublicKey = LEGACY_TOKEN_PROGRAM_ID) {
     return PublicKey.findProgramAddressSync(
-      [Buffer.from(BONDING_CURVE_SEED), mint.toBuffer()],
+      [Buffer.from(BONDING_CURVE_SEED), mint.toBuffer(), tokenProgram.toBuffer()],
       this.sdk.program.programId
     )[0];
   }

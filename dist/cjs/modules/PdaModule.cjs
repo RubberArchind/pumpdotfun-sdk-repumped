@@ -17,8 +17,8 @@ class PdaModule {
     getEventAuthorityPda() {
         return web3_js.PublicKey.findProgramAddressSync([Buffer.from(pumpFun_consts.EVENT_AUTHORITY_SEED)], this.sdk.program.programId)[0];
     }
-    getBondingCurvePDA(mint) {
-        return web3_js.PublicKey.findProgramAddressSync([Buffer.from(pumpFun_consts.BONDING_CURVE_SEED), mint.toBuffer()], this.sdk.program.programId)[0];
+    getBondingCurvePDA(mint, tokenProgram = pumpFun_consts.LEGACY_TOKEN_PROGRAM_ID) {
+        return web3_js.PublicKey.findProgramAddressSync([Buffer.from(pumpFun_consts.BONDING_CURVE_SEED), mint.toBuffer(), tokenProgram.toBuffer()], this.sdk.program.programId)[0];
     }
     getMintAuthorityPDA() {
         return web3_js.PublicKey.findProgramAddressSync([Buffer.from(pumpFun_consts.MINT_AUTHORITY_SEED)], this.sdk.program.programId)[0];

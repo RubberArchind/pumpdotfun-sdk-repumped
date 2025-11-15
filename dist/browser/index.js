@@ -5619,8 +5619,8 @@ class PdaModule {
     getEventAuthorityPda() {
         return PublicKey.findProgramAddressSync([Buffer.from(EVENT_AUTHORITY_SEED)], this.sdk.program.programId)[0];
     }
-    getBondingCurvePDA(mint) {
-        return PublicKey.findProgramAddressSync([Buffer.from(BONDING_CURVE_SEED), mint.toBuffer()], this.sdk.program.programId)[0];
+    getBondingCurvePDA(mint, tokenProgram = LEGACY_TOKEN_PROGRAM_ID) {
+        return PublicKey.findProgramAddressSync([Buffer.from(BONDING_CURVE_SEED), mint.toBuffer(), tokenProgram.toBuffer()], this.sdk.program.programId)[0];
     }
     getMintAuthorityPDA() {
         return PublicKey.findProgramAddressSync([Buffer.from(MINT_AUTHORITY_SEED)], this.sdk.program.programId)[0];
