@@ -74,12 +74,16 @@ class TokenModule {
         if (!tokenAccount) {
             return null;
         }
-        return BondingCurveAccount.BondingCurveAccount.fromBuffer(tokenAccount.data);
+        // Skip 8-byte Anchor discriminator
+        const accountData = tokenAccount.data.subarray(8);
+        return BondingCurveAccount.BondingCurveAccount.fromBuffer(accountData);
     }
     async getGlobalAccount(commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
         const tokenAccount = await this.sdk.connection.getAccountInfo(globalAccountPDA, commitment);
-        return GlobalAccount.GlobalAccount.fromBuffer(tokenAccount.data);
+        // Skip 8-byte Anchor discriminator
+        const accountData = tokenAccount.data.subarray(8);
+        return GlobalAccount.GlobalAccount.fromBuffer(accountData);
     }
     async getFeeConfig(commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const feePda = this.sdk.pda.getPumpFeeConfigPda();

@@ -108,7 +108,9 @@ export class TokenModule {
     if (!tokenAccount) {
       return null;
     }
-    return BondingCurveAccount.fromBuffer(tokenAccount!.data);
+    // Skip 8-byte Anchor discriminator
+    const accountData = tokenAccount.data.subarray(8);
+    return BondingCurveAccount.fromBuffer(accountData);
   }
 
   async getGlobalAccount(commitment: Commitment = DEFAULT_COMMITMENT) {
@@ -119,7 +121,9 @@ export class TokenModule {
       commitment
     );
 
-    return GlobalAccount.fromBuffer(tokenAccount!.data);
+    // Skip 8-byte Anchor discriminator
+    const accountData = tokenAccount!.data.subarray(8);
+    return GlobalAccount.fromBuffer(accountData);
   }
 
   async getFeeConfig(commitment: Commitment = DEFAULT_COMMITMENT) {
