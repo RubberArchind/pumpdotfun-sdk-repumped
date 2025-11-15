@@ -184,28 +184,20 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
 
-    // Detect mint's token program (Token2022 or legacy)
-    const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
-    if (!mintAccount) {
-      throw new Error(`Mint account not found: ${mint.toBase58()}`);
-    }
-    const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
-      ? TOKEN_2022_PROGRAM_ID
-      : TOKEN_PROGRAM_ID;
-
-    // Both bonding curve ATA and user ATA use the mint's token program
+    // CRITICAL: Buy instruction has tokenProgram HARDCODED to legacy in IDL
+    // We MUST use legacy TOKEN_PROGRAM_ID for both ATAs, even for Token2022 mints
     const associatedBonding = await getAssociatedTokenAddress(
       mint,
       bondingCurve,
       true, // allowOwnerOffCurve
-      tokenProgramId
+      TOKEN_PROGRAM_ID // Must be legacy for buy
     );
 
     const associatedUser = await getAssociatedTokenAddress(
       mint,
       buyer,
       false,
-      tokenProgramId
+      TOKEN_PROGRAM_ID // Must be legacy for buy
     );
     const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
     const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
@@ -233,7 +225,6 @@ export class TradeModule {
         globalVolumeAccumulator: this.sdk.pda.getGlobalVolumeAccumulatorPda(),
         userVolumeAccumulator: this.sdk.pda.getUserVolumeAccumulatorPda(buyer),
         feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
-        tokenProgram: tokenProgramId,
       })
       .instruction();
 
@@ -417,28 +408,21 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
 
-    // Detect mint's token program (Token2022 or legacy)
-    const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
-    if (!mintAccount) {
-      throw new Error(`Mint account not found: ${mint.toBase58()}`);
-    }
-    const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
-      ? TOKEN_2022_PROGRAM_ID
-      : TOKEN_PROGRAM_ID;
-
-    // Both bonding curve ATA and user ATA use the mint's token program
+    // CRITICAL: Sell instruction has tokenProgram HARDCODED to legacy in IDL
+    // We MUST use legacy TOKEN_PROGRAM_ID for both ATAs, even for Token2022 mints
+    // Jupiter works by transferring Token2022 → legacy ATA before selling
     const associatedBonding = await getAssociatedTokenAddress(
       mint,
       bondingCurve,
       true, // allowOwnerOffCurve
-      tokenProgramId
+      TOKEN_PROGRAM_ID // Must be legacy for sell
     );
 
     const associatedUser = await getAssociatedTokenAddress(
       mint,
       seller,
       false,
-      tokenProgramId
+      TOKEN_PROGRAM_ID // Must be legacy for sell
     );
 
     const globalPda = this.sdk.pda.getGlobalAccountPda();
@@ -469,7 +453,6 @@ export class TradeModule {
         creatorVault,
         eventAuthority,
         feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
-        tokenProgram: tokenProgramId,
       })
       .instruction();
 
