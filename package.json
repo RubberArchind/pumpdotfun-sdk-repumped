@@ -36,7 +36,8 @@
     "build": "rimraf dist && rollup -c --bundleConfigAsCjs",
     "prepare": "npm run build",
     "example": "npm run build && tsx example/index.ts",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && tsx test/integration.test.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
