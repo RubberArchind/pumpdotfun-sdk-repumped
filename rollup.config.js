@@ -12,6 +12,7 @@ const external = (id) =>
     "@solana/spl-token",
     "@coral-xyz/anchor",
     "jito-ts",
+    "bn.js",
     ...nodeBuiltins,
   ].some((pkg) => id === pkg || id.startsWith(`${pkg}/`)) ||
   builtinModules.includes(id);

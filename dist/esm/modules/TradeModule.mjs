@@ -1,4 +1,4 @@
-import BN from '../_virtual/bn.mjs';
+import BN from 'bn.js';
 import { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { Transaction, PublicKey } from '@solana/web3.js';
 import { GlobalAccount } from '../GlobalAccount.mjs';

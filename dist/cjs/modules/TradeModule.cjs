@@ -1,6 +1,6 @@
 'use strict';
 
-var bn = require('../_virtual/bn.cjs');
+var BN = require('bn.js');
 var splToken = require('@solana/spl-token');
 var web3_js = require('@solana/web3.js');
 var GlobalAccount = require('../GlobalAccount.cjs');
@@ -65,7 +65,7 @@ class TradeModule {
             : this.sdk.pda.getCreatorVaultPda(bondingCreator);
         const eventAuthority = this.sdk.pda.getEventAuthorityPda();
         const ix = await this.sdk.program.methods
-            .buy(new bn.default(amount.toString()), new bn.default(maxSolCost.toString()))
+            .buy(new BN(amount.toString()), new BN(maxSolCost.toString()))
             .accounts({
             global: globalAccountPDA,
             feeRecipient: globalAccount.feeRecipient,
@@ -188,7 +188,7 @@ class TradeModule {
         const creatorVault = this.sdk.pda.getCreatorVaultPda(bondingCreator);
         const eventAuthority = this.sdk.pda.getEventAuthorityPda();
         const ix = await this.sdk.program.methods
-            .sell(new bn.default(tokenAmount.toString()), new bn.default(minSolOutput.toString()))
+            .sell(new BN(tokenAmount.toString()), new BN(minSolOutput.toString()))
             .accounts({
             global: globalPda,
             feeRecipient,
