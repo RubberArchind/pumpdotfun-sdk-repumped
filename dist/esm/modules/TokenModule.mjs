@@ -57,7 +57,7 @@ class TokenModule {
             throw error;
         }
     }
-    async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = DEFAULT_COMMITMENT) {
+    async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = DEFAULT_COMMITMENT, allowOwnerOffCurve = false) {
         // Detect which token program this mint uses
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
@@ -67,7 +67,7 @@ class TokenModule {
         const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID)
             ? TOKEN_2022_PROGRAM_ID
             : TOKEN_PROGRAM_ID;
-        const associatedTokenAccount = await getAssociatedTokenAddress(mint, owner, false, tokenProgramId);
+        const associatedTokenAccount = await getAssociatedTokenAddress(mint, owner, allowOwnerOffCurve, tokenProgramId);
         try {
             await getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }

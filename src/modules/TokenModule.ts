@@ -75,7 +75,8 @@ export class TokenModule {
     owner: PublicKey,
     mint: PublicKey,
     transaction: Transaction,
-    commitment: Commitment = DEFAULT_COMMITMENT
+    commitment: Commitment = DEFAULT_COMMITMENT,
+    allowOwnerOffCurve: boolean = false
   ): Promise<PublicKey> {
     // Detect which token program this mint uses
     const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
@@ -91,7 +92,7 @@ export class TokenModule {
     const associatedTokenAccount = await getAssociatedTokenAddress(
       mint,
       owner,
-      false,
+      allowOwnerOffCurve,
       tokenProgramId
     );
 

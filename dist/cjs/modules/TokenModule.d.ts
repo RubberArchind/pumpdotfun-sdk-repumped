@@ -8,7 +8,7 @@ export declare class TokenModule {
     private sdk;
     constructor(sdk: PumpFunSDK);
     createTokenMetadata(create: CreateTokenMetadata): Promise<any>;
-    createAssociatedTokenAccountIfNeeded(payer: PublicKey, owner: PublicKey, mint: PublicKey, transaction: Transaction, commitment?: Commitment): Promise<PublicKey>;
+    createAssociatedTokenAccountIfNeeded(payer: PublicKey, owner: PublicKey, mint: PublicKey, transaction: Transaction, commitment?: Commitment, allowOwnerOffCurve?: boolean): Promise<PublicKey>;
     getBondingCurveAccount(mint: PublicKey, commitmentOrTokenProgram?: Commitment | PublicKey, commitment?: Commitment): Promise<BondingCurveAccount | null>;
     getGlobalAccount(commitment?: Commitment): Promise<GlobalAccount>;
     getFeeConfig(commitment?: Commitment): Promise<FeeConfig>;

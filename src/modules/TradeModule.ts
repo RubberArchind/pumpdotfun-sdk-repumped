@@ -184,14 +184,15 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
     
-    // Create bonding curve ATA if needed (using same token program detection)
+    // Create bonding curve ATA if needed (PDA requires allowOwnerOffCurve=true)
     const associatedBonding = 
       await this.sdk.token.createAssociatedTokenAccountIfNeeded(
         buyer,
         bondingCurve,
         mint,
         tx,
-        commitment
+        commitment,
+        true // allowOwnerOffCurve - bonding curve is a PDA
       );
 
     const associatedUser =
@@ -200,7 +201,8 @@ export class TradeModule {
         buyer,
         mint,
         tx,
-        commitment
+        commitment,
+        false // allowOwnerOffCurve - user is a wallet
       );
     const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
     const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
@@ -411,14 +413,15 @@ export class TradeModule {
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
     
-    // Create bonding curve ATA if needed (using same token program detection)
+    // Create bonding curve ATA if needed (PDA requires allowOwnerOffCurve=true)
     const associatedBonding = 
       await this.sdk.token.createAssociatedTokenAccountIfNeeded(
         seller,
         bondingCurve,
         mint,
         tx,
-        commitment
+        commitment,
+        true // allowOwnerOffCurve - bonding curve is a PDA
       );
 
     const associatedUser =
@@ -427,7 +430,8 @@ export class TradeModule {
         seller,
         mint,
         tx,
-        commitment
+        commitment,
+        false // allowOwnerOffCurve - user is a wallet
       );
 
     const globalPda = this.sdk.pda.getGlobalAccountPda();

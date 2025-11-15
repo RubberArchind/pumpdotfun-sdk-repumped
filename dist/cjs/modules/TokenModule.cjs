@@ -59,7 +59,7 @@ class TokenModule {
             throw error;
         }
     }
-    async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
+    async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = pumpFun_consts.DEFAULT_COMMITMENT, allowOwnerOffCurve = false) {
         // Detect which token program this mint uses
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
@@ -69,7 +69,7 @@ class TokenModule {
         const tokenProgramId = mintAccount.owner.equals(splToken.TOKEN_2022_PROGRAM_ID)
             ? splToken.TOKEN_2022_PROGRAM_ID
             : splToken.TOKEN_PROGRAM_ID;
-        const associatedTokenAccount = await splToken.getAssociatedTokenAddress(mint, owner, false, tokenProgramId);
+        const associatedTokenAccount = await splToken.getAssociatedTokenAddress(mint, owner, allowOwnerOffCurve, tokenProgramId);
         try {
             await splToken.getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }

@@ -5235,7 +5235,7 @@ class TokenModule {
             throw error;
         }
     }
-    async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = DEFAULT_COMMITMENT) {
+    async createAssociatedTokenAccountIfNeeded(payer, owner, mint, transaction, commitment = DEFAULT_COMMITMENT, allowOwnerOffCurve = false) {
         // Detect which token program this mint uses
         const mintAccount = await this.sdk.connection.getAccountInfo(mint, commitment);
         if (!mintAccount) {
@@ -5245,7 +5245,7 @@ class TokenModule {
         const tokenProgramId = mintAccount.owner.equals(TOKEN_2022_PROGRAM_ID$1)
             ? TOKEN_2022_PROGRAM_ID$1
             : TOKEN_PROGRAM_ID;
-        const associatedTokenAccount = await getAssociatedTokenAddress(mint, owner, false, tokenProgramId);
+        const associatedTokenAccount = await getAssociatedTokenAddress(mint, owner, allowOwnerOffCurve, tokenProgramId);
         try {
             await getAccount(this.sdk.connection, associatedTokenAccount, commitment, tokenProgramId);
         }
@@ -5425,9 +5425,11 @@ class TradeModule {
     }
     async buildBuyIx(buyer, mint, amount, maxSolCost, tx, commitment, shouldUseBuyerAsBonding) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        // Create bonding curve ATA if needed (using same token program detection)
-        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, bondingCurve, mint, tx, commitment);
-        const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, buyer, mint, tx, commitment);
+        // Create bonding curve ATA if needed (PDA requires allowOwnerOffCurve=true)
+        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, bondingCurve, mint, tx, commitment, true // allowOwnerOffCurve - bonding curve is a PDA
+        );
+        const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, buyer, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
+        );
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
         const bondingCreator = shouldUseBuyerAsBonding
@@ -5552,9 +5554,11 @@ class TradeModule {
     }
     async buildSellIx(seller, mint, tokenAmount, minSolOutput, tx, commitment) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        // Create bonding curve ATA if needed (using same token program detection)
-        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, bondingCurve, mint, tx, commitment);
-        const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, seller, mint, tx, commitment);
+        // Create bonding curve ATA if needed (PDA requires allowOwnerOffCurve=true)
+        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, bondingCurve, mint, tx, commitment, true // allowOwnerOffCurve - bonding curve is a PDA
+        );
+        const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, seller, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
+        );
         const globalPda = this.sdk.pda.getGlobalAccountPda();
         const globalBuf = await this.sdk.connection.getAccountInfo(globalPda, commitment);
         const feeRecipient = GlobalAccount.fromBuffer(globalBuf.data).feeRecipient;
