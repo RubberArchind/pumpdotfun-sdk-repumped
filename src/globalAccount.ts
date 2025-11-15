@@ -67,23 +67,48 @@ export class GlobalAccount {
   }
 
   public static fromBuffer(buffer: Buffer): GlobalAccount {
-    const structure: Layout<GlobalAccount> = struct([
-      u64("discriminator"),
-      bool("initialized"),
-      publicKey("authority"),
-      publicKey("feeRecipient"),
-      u64("initialVirtualTokenReserves"),
-      u64("initialVirtualSolReserves"),
-      u64("initialRealTokenReserves"),
-      u64("tokenTotalSupply"),
-      u64("feeBasisPoints"),
-      publicKey("withdrawAuthority"),
-      bool("enableMigrate"),
-      u64("poolMigrationFee"),
-      u64("creatorFeeBasisPoints"),
-      publicKey("reservedFeeRecipient"),
-      bool("mayhemModeEnabled"),
-    ]);
+    // Check buffer size to determine if it's old (243 bytes) or new (244 bytes) format
+    const isOldFormat = buffer.length === 243;
+    const isNewFormat = buffer.length === 244;
+
+    if (!isOldFormat && !isNewFormat) {
+      throw new Error(`Invalid GlobalAccount buffer size: ${buffer.length} (expected 243 or 244)`);
+    }
+
+    // Use appropriate structure based on buffer size
+    const structure: Layout<GlobalAccount> = isOldFormat
+      ? struct([
+          u64("discriminator"),
+          bool("initialized"),
+          publicKey("authority"),
+          publicKey("feeRecipient"),
+          u64("initialVirtualTokenReserves"),
+          u64("initialVirtualSolReserves"),
+          u64("initialRealTokenReserves"),
+          u64("tokenTotalSupply"),
+          u64("feeBasisPoints"),
+          publicKey("withdrawAuthority"),
+          bool("enableMigrate"),
+          u64("poolMigrationFee"),
+          u64("creatorFeeBasisPoints"),
+        ])
+      : struct([
+          u64("discriminator"),
+          bool("initialized"),
+          publicKey("authority"),
+          publicKey("feeRecipient"),
+          u64("initialVirtualTokenReserves"),
+          u64("initialVirtualSolReserves"),
+          u64("initialRealTokenReserves"),
+          u64("tokenTotalSupply"),
+          u64("feeBasisPoints"),
+          publicKey("withdrawAuthority"),
+          bool("enableMigrate"),
+          u64("poolMigrationFee"),
+          u64("creatorFeeBasisPoints"),
+          publicKey("reservedFeeRecipient"),
+          bool("mayhemModeEnabled"),
+        ]);
 
     let value = structure.decode(buffer);
     return new GlobalAccount(
@@ -100,8 +125,8 @@ export class GlobalAccount {
       value.enableMigrate,
       BigInt(value.poolMigrationFee),
       BigInt(value.creatorFeeBasisPoints),
-      value.reservedFeeRecipient,
-      value.mayhemModeEnabled
+      isOldFormat ? PublicKey.default : (value as any).reservedFeeRecipient,
+      isOldFormat ? false : (value as any).mayhemModeEnabled
     );
   }
 }

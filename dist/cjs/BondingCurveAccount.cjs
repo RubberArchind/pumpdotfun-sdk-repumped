@@ -91,19 +91,38 @@ class BondingCurveAccount {
         return (this.virtualSolReserves * mintSupply) / this.virtualTokenReserves;
     }
     static fromBuffer(buffer) {
-        const structure = borsh.struct([
-            borsh.u64("discriminator"),
-            borsh.u64("virtualTokenReserves"),
-            borsh.u64("virtualSolReserves"),
-            borsh.u64("realTokenReserves"),
-            borsh.u64("realSolReserves"),
-            borsh.u64("tokenTotalSupply"),
-            borsh.bool("complete"),
-            borsh.publicKey("creator"),
-            borsh.bool("isMayhemMode"),
-        ]);
+        // Check buffer size to determine if it's old (81 bytes) or new (82 bytes) format
+        const isOldFormat = buffer.length === 81;
+        const isNewFormat = buffer.length === 82;
+        if (!isOldFormat && !isNewFormat) {
+            throw new Error(`Invalid BondingCurveAccount buffer size: ${buffer.length} (expected 81 or 82)`);
+        }
+        // Use appropriate structure based on buffer size
+        const structure = isOldFormat
+            ? borsh.struct([
+                borsh.u64("discriminator"),
+                borsh.u64("virtualTokenReserves"),
+                borsh.u64("virtualSolReserves"),
+                borsh.u64("realTokenReserves"),
+                borsh.u64("realSolReserves"),
+                borsh.u64("tokenTotalSupply"),
+                borsh.bool("complete"),
+                borsh.publicKey("creator"),
+            ])
+            : borsh.struct([
+                borsh.u64("discriminator"),
+                borsh.u64("virtualTokenReserves"),
+                borsh.u64("virtualSolReserves"),
+                borsh.u64("realTokenReserves"),
+                borsh.u64("realSolReserves"),
+                borsh.u64("tokenTotalSupply"),
+                borsh.bool("complete"),
+                borsh.publicKey("creator"),
+                borsh.bool("isMayhemMode"),
+            ]);
         let value = structure.decode(buffer);
-        return new BondingCurveAccount(BigInt(value.discriminator), BigInt(value.virtualTokenReserves), BigInt(value.virtualSolReserves), BigInt(value.realTokenReserves), BigInt(value.realSolReserves), BigInt(value.tokenTotalSupply), value.complete, value.creator, value.isMayhemMode);
+        return new BondingCurveAccount(BigInt(value.discriminator), BigInt(value.virtualTokenReserves), BigInt(value.virtualSolReserves), BigInt(value.realTokenReserves), BigInt(value.realSolReserves), BigInt(value.tokenTotalSupply), value.complete, value.creator, isOldFormat ? false : value.isMayhemMode // Old accounts are never mayhem mode
+        );
     }
 }
 
