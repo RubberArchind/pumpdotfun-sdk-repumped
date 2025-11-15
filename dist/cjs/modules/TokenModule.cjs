@@ -92,9 +92,9 @@ class TokenModule {
     async getGlobalAccount(commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
         const tokenAccount = await this.sdk.connection.getAccountInfo(globalAccountPDA, commitment);
-        // Skip 8-byte Anchor discriminator
-        const accountData = tokenAccount.data.subarray(8);
-        return GlobalAccount.GlobalAccount.fromBuffer(accountData);
+        // Note: Global account does NOT have the 8-byte Anchor discriminator
+        // Parse the data directly without skipping bytes
+        return GlobalAccount.GlobalAccount.fromBuffer(tokenAccount.data);
     }
     async getFeeConfig(commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const feePda = this.sdk.pda.getPumpFeeConfigPda();

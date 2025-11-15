@@ -49,53 +49,34 @@ class GlobalAccount {
             : this.initialRealTokenReserves;
     }
     static fromBuffer(buffer) {
-        // The Global account has been expanded significantly beyond the original 243/244 bytes
-        // We only need to read the first 243 or 244 bytes for the fields we care about
-        const minOldSize = 243;
-        const minNewSize = 244;
-        if (buffer.length < minOldSize) {
-            throw new Error(`Invalid GlobalAccount buffer size: ${buffer.length} (expected at least ${minOldSize})`);
+        // The Global account structure has changed significantly and is now 740 bytes
+        // The new structure has additional fields that we don't fully understand yet
+        // We'll parse only the core fields we need for trading operations
+        const minRequiredSize = 162; // Up to creatorFeeBasisPoints
+        if (buffer.length < minRequiredSize) {
+            throw new Error(`Invalid GlobalAccount buffer size: ${buffer.length} (expected at least ${minRequiredSize})`);
         }
-        // Check if we have the new fields by looking at byte 243
-        const hasNewFields = buffer.length >= minNewSize;
-        // Use appropriate structure based on available data
-        const structure = hasNewFields
-            ? borsh.struct([
-                borsh.u64("discriminator"),
-                borsh.bool("initialized"),
-                borsh.publicKey("authority"),
-                borsh.publicKey("feeRecipient"),
-                borsh.u64("initialVirtualTokenReserves"),
-                borsh.u64("initialVirtualSolReserves"),
-                borsh.u64("initialRealTokenReserves"),
-                borsh.u64("tokenTotalSupply"),
-                borsh.u64("feeBasisPoints"),
-                borsh.publicKey("withdrawAuthority"),
-                borsh.bool("enableMigrate"),
-                borsh.u64("poolMigrationFee"),
-                borsh.u64("creatorFeeBasisPoints"),
-                borsh.publicKey("reservedFeeRecipient"),
-                borsh.bool("mayhemModeEnabled"),
-            ])
-            : borsh.struct([
-                borsh.u64("discriminator"),
-                borsh.bool("initialized"),
-                borsh.publicKey("authority"),
-                borsh.publicKey("feeRecipient"),
-                borsh.u64("initialVirtualTokenReserves"),
-                borsh.u64("initialVirtualSolReserves"),
-                borsh.u64("initialRealTokenReserves"),
-                borsh.u64("tokenTotalSupply"),
-                borsh.u64("feeBasisPoints"),
-                borsh.publicKey("withdrawAuthority"),
-                borsh.bool("enableMigrate"),
-                borsh.u64("poolMigrationFee"),
-                borsh.u64("creatorFeeBasisPoints"),
-            ]);
-        // Only decode the bytes we need (first 243 or 244 bytes)
-        const bytesToDecode = hasNewFields ? minNewSize : minOldSize;
-        let value = structure.decode(buffer.subarray(0, bytesToDecode));
-        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), hasNewFields ? value.reservedFeeRecipient : web3_js.PublicKey.default, hasNewFields ? value.mayhemModeEnabled : false);
+        // Parse only the core fields that haven't changed structure
+        const structure = borsh.struct([
+            borsh.u64("discriminator"),
+            borsh.bool("initialized"),
+            borsh.publicKey("authority"),
+            borsh.publicKey("feeRecipient"),
+            borsh.u64("initialVirtualTokenReserves"),
+            borsh.u64("initialVirtualSolReserves"),
+            borsh.u64("initialRealTokenReserves"),
+            borsh.u64("tokenTotalSupply"),
+            borsh.u64("feeBasisPoints"),
+            borsh.publicKey("withdrawAuthority"),
+            borsh.bool("enableMigrate"),
+            borsh.u64("poolMigrationFee"),
+            borsh.u64("creatorFeeBasisPoints"),
+        ]);
+        // Decode only the first 162 bytes (up to creatorFeeBasisPoints)
+        let value = structure.decode(buffer.subarray(0, minRequiredSize));
+        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), web3_js.PublicKey.default, // reservedFeeRecipient - structure changed, use default
+        false // mayhemModeEnabled - structure changed, use default
+        );
     }
 }
 

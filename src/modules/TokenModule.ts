@@ -134,9 +134,9 @@ export class TokenModule {
       commitment
     );
 
-    // Skip 8-byte Anchor discriminator
-    const accountData = tokenAccount!.data.subarray(8);
-    return GlobalAccount.fromBuffer(accountData);
+    // Note: Global account does NOT have the 8-byte Anchor discriminator
+    // Parse the data directly without skipping bytes
+    return GlobalAccount.fromBuffer(tokenAccount!.data);
   }
 
   async getFeeConfig(commitment: Commitment = DEFAULT_COMMITMENT) {
