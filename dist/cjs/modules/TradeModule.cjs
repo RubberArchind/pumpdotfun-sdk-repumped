@@ -53,9 +53,12 @@ class TradeModule {
     }
     async buildBuyIx(buyer, mint, amount, maxSolCost, tx, commitment, shouldUseBuyerAsBonding) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        // Create bonding curve ATA if needed (PDA requires allowOwnerOffCurve=true)
-        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, bondingCurve, mint, tx, commitment, true // allowOwnerOffCurve - bonding curve is a PDA
+        // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
+        // The pump.fun program has tokenProgram hardcoded to legacy in the buy instruction
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve - bonding curve is a PDA
+        splToken.TOKEN_PROGRAM_ID // Always use legacy token program for bonding curve
         );
+        // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
         const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(buyer, buyer, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
         );
         const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
@@ -182,9 +185,12 @@ class TradeModule {
     }
     async buildSellIx(seller, mint, tokenAmount, minSolOutput, tx, commitment) {
         const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
-        // Create bonding curve ATA if needed (PDA requires allowOwnerOffCurve=true)
-        const associatedBonding = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, bondingCurve, mint, tx, commitment, true // allowOwnerOffCurve - bonding curve is a PDA
+        // IMPORTANT: Bonding curve ATA MUST use legacy TOKEN_PROGRAM_ID
+        // The pump.fun program has tokenProgram hardcoded to legacy in the sell instruction
+        const associatedBonding = await splToken.getAssociatedTokenAddress(mint, bondingCurve, true, // allowOwnerOffCurve - bonding curve is a PDA
+        splToken.TOKEN_PROGRAM_ID // Always use legacy token program for bonding curve
         );
+        // User ATA uses the correct token program based on mint type (Token2022 vs legacy)
         const associatedUser = await this.sdk.token.createAssociatedTokenAccountIfNeeded(seller, seller, mint, tx, commitment, false // allowOwnerOffCurve - user is a wallet
         );
         const globalPda = this.sdk.pda.getGlobalAccountPda();
