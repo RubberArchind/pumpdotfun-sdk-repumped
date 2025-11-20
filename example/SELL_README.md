@@ -73,3 +73,24 @@ The script will exit with an error if:
 - This script only works for tokens still on pump.fun bonding curve
 - Tokens that have graduated to Raydium must be sold through Raydium
 - The script uses legacy token program ATAs as required by pump.fun's sell instruction
+
+## Token2022 Support
+
+**Status**: ✅ Token2022 tokens are now fully supported as of SDK v2.0!
+
+**What changed**: On November 11, 2025, pump.fun updated the on-chain program to support Token2022 tokens. This SDK has been updated to match those breaking changes:
+- IDL now accepts both `TOKEN_PROGRAM_ID` (legacy) and `TOKEN_2022_PROGRAM_ID` 
+- The `sell()` method automatically detects the token type and uses the correct program
+- No additional configuration needed
+
+**Token2022 Trading**: You can now sell Token2022 tokens directly using the same `sell()` method:
+```bash
+bun run example/sellToken.ts 4JN5guh15dfPxoBe6KgsipAnKJC3zLgj6VJ1us4Dpump your_base58_private_key
+```
+
+The script will automatically:
+- Detect if the mint is Token2022
+- Find the correct Token2022 ATA for your wallet
+- Use the Token2022 program when executing the sell transaction
+
+No manual workarounds or transfers needed!
