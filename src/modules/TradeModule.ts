@@ -217,6 +217,16 @@ export class TradeModule {
 
     const eventAuthority = this.sdk.pda.getEventAuthorityPda();
 
+    // Create associated token account for user if it doesn't exist (critical for Token2022)
+    await this.sdk.token.createAssociatedTokenAccountIfNeeded(
+      buyer,
+      buyer,
+      mint,
+      tx,
+      commitment,
+      false
+    );
+
     const buyIx = this.sdk.program.methods
       .buy(new BN(amount.toString()), new BN(maxSolCost.toString()))
       .accounts({
