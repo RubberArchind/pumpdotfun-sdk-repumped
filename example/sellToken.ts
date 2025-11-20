@@ -4,11 +4,20 @@ import {
     PublicKey,
     Keypair,
     LAMPORTS_PER_SOL,
+    Transaction,
+    sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { DEFAULT_DECIMALS } from "../src/pumpFun.consts.js";
 import { PumpFunSDK } from "../src/index.js";
-import { getAccount, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+    getAccount,
+    getAssociatedTokenAddress,
+    TOKEN_PROGRAM_ID,
+    TOKEN_2022_PROGRAM_ID,
+    createAssociatedTokenAccountInstruction,
+    createTransferCheckedInstruction,
+} from "@solana/spl-token";
 import bs58 from "bs58";
 
 const RPC = process.env.HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com";
@@ -80,25 +89,86 @@ async function main() {
         process.exit(1);
     }
 
+    // Check if mint is Token2022
+    const mintInfo = await connection.getAccountInfo(mint);
+    if (!mintInfo) {
+        console.error("Error: Mint account not found");
+        process.exit(1);
+    }
+
+    const isMintToken2022 = mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID);
+    if (isMintToken2022) {
+        console.log("\n⚠️  This is a Token2022 mint");
+    }
+
     // Get token account and balance
-    const userATA = await getAssociatedTokenAddress(
+    // Check both legacy and Token2022 ATAs
+    const legacyATA = await getAssociatedTokenAddress(
         mint,
         seller.publicKey,
         false,
         TOKEN_PROGRAM_ID
     );
+    const token2022ATA = await getAssociatedTokenAddress(
+        mint,
+        seller.publicKey,
+        false,
+        TOKEN_2022_PROGRAM_ID
+    );
 
-    let tokenBalance: bigint;
+    let tokenBalance: bigint = 0n;
+    let userATA: PublicKey;
+    let isToken2022 = false;
+
+    // Try legacy ATA first
+    let legacyBalance = 0n;
+    let legacyExists = false;
     try {
-        const tokenAccount = await getAccount(
+        const legacyAccount = await getAccount(
             connection,
-            userATA,
+            legacyATA,
             "confirmed",
             TOKEN_PROGRAM_ID
         );
-        tokenBalance = tokenAccount.amount;
+        legacyBalance = legacyAccount.amount;
+        legacyExists = true;
     } catch (error) {
-        console.error("Error: No token account found or balance is 0");
+        // Legacy ATA doesn't exist or is empty
+    }
+
+    // Try Token2022 ATA
+    let token2022Balance = 0n;
+    let token2022Exists = false;
+    try {
+        const token2022Account = await getAccount(
+            connection,
+            token2022ATA,
+            "confirmed",
+            TOKEN_2022_PROGRAM_ID
+        );
+        token2022Balance = token2022Account.amount;
+        token2022Exists = true;
+    } catch (error) {
+        // Token2022 ATA doesn't exist or is empty
+    }
+
+    // Use legacy ATA if it has tokens, otherwise use Token2022
+    if (legacyExists && legacyBalance > 0n) {
+        userATA = legacyATA;
+        tokenBalance = legacyBalance;
+        isToken2022 = false;
+        console.log("\n✓ Found legacy token account");
+    } else if (token2022Exists && token2022Balance > 0n) {
+        userATA = token2022ATA;
+        tokenBalance = token2022Balance;
+        isToken2022 = true;
+        console.log("\n✓ Found Token2022 account");
+        console.log("   Will use Token2022 ATA for selling");
+    } else {
+        console.error("\n✗ No token account found (checked both legacy and Token2022)");
+        console.error("  Legacy ATA:", legacyATA.toBase58(), "exists:", legacyExists, "balance:", legacyBalance.toString());
+        console.error("  Token2022 ATA:", token2022ATA.toBase58(), "exists:", token2022Exists, "balance:", token2022Balance.toString());
+        console.error("\nThis wallet has no tokens for this mint.");
         process.exit(1);
     }
 

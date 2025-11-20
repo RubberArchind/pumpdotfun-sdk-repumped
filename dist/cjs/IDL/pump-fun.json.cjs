@@ -596,8 +596,7 @@ var instructions = [
 				address: "11111111111111111111111111111111"
 			},
 			{
-				name: "token_program",
-				address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+				name: "token_program"
 			},
 			{
 				name: "creator_vault",
@@ -2529,8 +2528,7 @@ var instructions = [
 				}
 			},
 			{
-				name: "token_program",
-				address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+				name: "token_program"
 			},
 			{
 				name: "event_authority",

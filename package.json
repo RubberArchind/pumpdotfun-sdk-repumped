@@ -39,6 +39,8 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && tsx test/integration.test.ts",
     "sell": "npm run build && tsx example/sellToken.ts",
+    "example:create-and-sell": "npm run build && tsx example/createLegacyAndSell.ts",
+    "transfer-to-legacy": "npm run build && tsx example/transferToLegacyATA.ts",
     "test:sell": "npm run build && tsx example/testSell.ts",
     "fix:old-token": "npm run build && tsx example/fixOldToken.ts"
   },
