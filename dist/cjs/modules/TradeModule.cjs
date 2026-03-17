@@ -107,7 +107,14 @@ class TradeModule {
             globalVolumeAccumulator: this.sdk.pda.getGlobalVolumeAccumulatorPda(),
             userVolumeAccumulator: this.sdk.pda.getUserVolumeAccumulatorPda(buyer),
             feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
-        });
+        })
+            .remainingAccounts([
+            {
+                pubkey: this.sdk.pda.getBondingCurveV2PDA(mint),
+                isSigner: false,
+                isWritable: false,
+            },
+        ]);
         const ix = await buyIx.instruction();
         tx.add(ix);
     }
@@ -241,7 +248,23 @@ class TradeModule {
             tokenProgram, // Explicitly pass the correct token program (Token2022 or legacy)
             eventAuthority,
             feeConfig: this.sdk.pda.getPumpFeeConfigPda(),
-        });
+        })
+            .remainingAccounts([
+            ...(bondingCurveAccount?.isCashbackCoin
+                ? [
+                    {
+                        pubkey: this.sdk.pda.getUserVolumeAccumulatorPda(seller),
+                        isSigner: false,
+                        isWritable: true,
+                    },
+                ]
+                : []),
+            {
+                pubkey: this.sdk.pda.getBondingCurveV2PDA(mint),
+                isSigner: false,
+                isWritable: false,
+            },
+        ]);
         const ix = await sellIx.instruction();
         tx.add(ix);
     }

@@ -7,6 +7,7 @@ export declare class PdaModule {
     getGlobalAccountPda(): PublicKey;
     getEventAuthorityPda(): PublicKey;
     getBondingCurvePDA(mint: PublicKey, tokenProgram?: PublicKey): PublicKey;
+    getBondingCurveV2PDA(mint: PublicKey): PublicKey;
     getMintAuthorityPDA(): PublicKey;
     getPumpFeeConfigPda(): PublicKey;
     getMetadataPDA(mint: PublicKey): PublicKey;

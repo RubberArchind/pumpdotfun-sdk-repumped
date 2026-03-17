@@ -52,6 +52,13 @@ export class PdaModule {
     )[0];
   }
 
+  getBondingCurveV2PDA(mint: PublicKey): PublicKey {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("bonding-curve-v2"), mint.toBuffer()],
+      this.sdk.program.programId
+    )[0];
+  }
+
   getMintAuthorityPDA() {
     return PublicKey.findProgramAddressSync(
       [Buffer.from(MINT_AUTHORITY_SEED)],

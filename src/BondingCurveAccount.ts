@@ -14,6 +14,7 @@ export class BondingCurveAccount {
   public complete: boolean;
   public creator: PublicKey;
   public isMayhemMode: boolean;
+  public isCashbackCoin: boolean;
 
   constructor(
     discriminator: bigint,
@@ -24,7 +25,8 @@ export class BondingCurveAccount {
     tokenTotalSupply: bigint,
     complete: boolean,
     creator: PublicKey,
-    isMayhemMode: boolean = false
+    isMayhemMode: boolean = false,
+    isCashbackCoin: boolean = false
   ) {
     this.discriminator = discriminator;
     this.virtualTokenReserves = virtualTokenReserves;
@@ -35,6 +37,7 @@ export class BondingCurveAccount {
     this.complete = complete;
     this.creator = creator;
     this.isMayhemMode = isMayhemMode;
+    this.isCashbackCoin = isCashbackCoin;
   }
 
   getBuyPrice(
@@ -166,6 +169,7 @@ export class BondingCurveAccount {
     // We only need to read the first 81 or 82 bytes for the fields we care about
     const minOldSize = 81; // 8 u64s + 1 bool + 32-byte pubkey = 73 bytes
     const minNewSize = 82; // + 1 bool for isMayhemMode
+    const minCashbackSize = 83; // + 1 bool for cashback flag
 
     if (buffer.length < minOldSize) {
       throw new Error(`Invalid BondingCurveAccount buffer size: ${buffer.length} (expected at least ${minOldSize})`);
@@ -173,9 +177,23 @@ export class BondingCurveAccount {
 
     // Check if we have the mayhem mode field by looking at available data
     const hasNewFields = buffer.length >= minNewSize;
+    const hasCashbackField = buffer.length >= minCashbackSize;
     
     // Use appropriate structure based on available data
-    const structure: Layout<BondingCurveAccount> = hasNewFields
+    const structure: Layout<BondingCurveAccount> = hasCashbackField
+      ? struct([
+          u64("discriminator"),
+          u64("virtualTokenReserves"),
+          u64("virtualSolReserves"),
+          u64("realTokenReserves"),
+          u64("realSolReserves"),
+          u64("tokenTotalSupply"),
+          bool("complete"),
+          publicKey("creator"),
+          bool("isMayhemMode"),
+          bool("isCashbackCoin"),
+        ])
+      : hasNewFields
       ? struct([
           u64("discriminator"),
           u64("virtualTokenReserves"),
@@ -199,7 +217,11 @@ export class BondingCurveAccount {
         ]);
 
     // Only decode the bytes we need (first 81 or 82 bytes)
-    const bytesToDecode = hasNewFields ? minNewSize : minOldSize;
+    const bytesToDecode = hasCashbackField
+      ? minCashbackSize
+      : hasNewFields
+      ? minNewSize
+      : minOldSize;
     let value = structure.decode(buffer.subarray(0, bytesToDecode));
     
     return new BondingCurveAccount(
@@ -211,7 +233,8 @@ export class BondingCurveAccount {
       BigInt(value.tokenTotalSupply),
       value.complete,
       value.creator,
-      hasNewFields ? (value as any).isMayhemMode : false
+      hasNewFields ? (value as any).isMayhemMode : false,
+      hasCashbackField ? (value as any).isCashbackCoin : false
     );
   }
 }

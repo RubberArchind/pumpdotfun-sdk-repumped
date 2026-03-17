@@ -22,6 +22,9 @@ class PdaModule {
         // actual on-chain implementation uses only mint for both legacy and Token2022 tokens
         return web3_js.PublicKey.findProgramAddressSync([Buffer.from(pumpFun_consts.BONDING_CURVE_SEED), mint.toBuffer()], this.sdk.program.programId)[0];
     }
+    getBondingCurveV2PDA(mint) {
+        return web3_js.PublicKey.findProgramAddressSync([Buffer.from("bonding-curve-v2"), mint.toBuffer()], this.sdk.program.programId)[0];
+    }
     getMintAuthorityPDA() {
         return web3_js.PublicKey.findProgramAddressSync([Buffer.from(pumpFun_consts.MINT_AUTHORITY_SEED)], this.sdk.program.programId)[0];
     }

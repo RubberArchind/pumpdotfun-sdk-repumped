@@ -12,7 +12,8 @@ export declare class BondingCurveAccount {
     complete: boolean;
     creator: PublicKey;
     isMayhemMode: boolean;
-    constructor(discriminator: bigint, virtualTokenReserves: bigint, virtualSolReserves: bigint, realTokenReserves: bigint, realSolReserves: bigint, tokenTotalSupply: bigint, complete: boolean, creator: PublicKey, isMayhemMode?: boolean);
+    isCashbackCoin: boolean;
+    constructor(discriminator: bigint, virtualTokenReserves: bigint, virtualSolReserves: bigint, realTokenReserves: bigint, realSolReserves: bigint, tokenTotalSupply: bigint, complete: boolean, creator: PublicKey, isMayhemMode?: boolean, isCashbackCoin?: boolean);
     getBuyPrice(globalAccount: GlobalAccount, feeConfig: FeeConfig, amount: bigint): bigint;
     getBuyTokenAmountFromSolAmountQuote({ inputAmount, virtualTokenReserves, virtualSolReserves, }: {
         inputAmount: bigint;
