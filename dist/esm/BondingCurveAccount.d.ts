@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { FeeConfig } from "./FeeConfig.js";
 import { GlobalAccount } from "./globalAccount.js";
 export declare class BondingCurveAccount {
+    private static readonly BUY_AMOUNT_SAFETY_BPS;
     discriminator: bigint;
     virtualTokenReserves: bigint;
     virtualSolReserves: bigint;

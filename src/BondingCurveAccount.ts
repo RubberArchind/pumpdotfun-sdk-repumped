@@ -4,6 +4,7 @@ import { FeeConfig } from "./FeeConfig.js";
 import { GlobalAccount } from "./globalAccount.js";
 
 export class BondingCurveAccount {
+  private static readonly BUY_AMOUNT_SAFETY_BPS = 9900n;
   public discriminator: bigint;
   public virtualTokenReserves: bigint;
   public virtualSolReserves: bigint;
@@ -68,9 +69,23 @@ export class BondingCurveAccount {
       virtualSolReserves: this.virtualSolReserves,
     });
 
-    return tokensReceived < this.realTokenReserves
-      ? tokensReceived
-      : this.realTokenReserves;
+    const cappedTokensReceived =
+      tokensReceived < this.realTokenReserves
+        ? tokensReceived
+        : this.realTokenReserves;
+
+    // Pump's on-chain math has drifted slightly from the local quote path on
+    // newer coins. Requesting a slightly smaller token amount keeps the buy
+    // under the caller's max SOL cost while avoiding overflow on-chain.
+    const safeTokensReceived =
+      (cappedTokensReceived * BondingCurveAccount.BUY_AMOUNT_SAFETY_BPS) /
+      10_000n;
+
+    if (safeTokensReceived > 0n) {
+      return safeTokensReceived;
+    }
+
+    return cappedTokensReceived > 0n ? 1n : 0n;
   }
 
   getBuyTokenAmountFromSolAmountQuote({

@@ -2,6 +2,7 @@ import { struct, u64, bool, publicKey } from '@coral-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 
 class BondingCurveAccount {
+    static BUY_AMOUNT_SAFETY_BPS = 9900n;
     discriminator;
     virtualTokenReserves;
     virtualSolReserves;
@@ -45,9 +46,18 @@ class BondingCurveAccount {
             virtualTokenReserves: this.virtualTokenReserves,
             virtualSolReserves: this.virtualSolReserves,
         });
-        return tokensReceived < this.realTokenReserves
+        const cappedTokensReceived = tokensReceived < this.realTokenReserves
             ? tokensReceived
             : this.realTokenReserves;
+        // Pump's on-chain math has drifted slightly from the local quote path on
+        // newer coins. Requesting a slightly smaller token amount keeps the buy
+        // under the caller's max SOL cost while avoiding overflow on-chain.
+        const safeTokensReceived = (cappedTokensReceived * BondingCurveAccount.BUY_AMOUNT_SAFETY_BPS) /
+            10000n;
+        if (safeTokensReceived > 0n) {
+            return safeTokensReceived;
+        }
+        return cappedTokensReceived > 0n ? 1n : 0n;
     }
     getBuyTokenAmountFromSolAmountQuote({ inputAmount, virtualTokenReserves, virtualSolReserves, }) {
         return ((inputAmount * virtualTokenReserves) / (virtualSolReserves + inputAmount));
