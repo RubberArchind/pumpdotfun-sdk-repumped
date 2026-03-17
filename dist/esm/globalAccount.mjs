@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { struct, u64, bool, publicKey } from '@coral-xyz/borsh';
+import { struct, u64, bool, publicKey, u8 } from '@coral-xyz/borsh';
 
 class GlobalAccount {
     discriminator;
@@ -70,11 +70,11 @@ class GlobalAccount {
             u64("poolMigrationFee"),
             u64("creatorFeeBasisPoints"),
             publicKey("reservedFeeRecipient"),
-            bool("mayhemModeEnabled"),
+            u8("mayhemModeEnabled"),
         ]);
         // Decode only the fields we actively use.
         let value = structure.decode(buffer.subarray(0, minRequiredSize));
-        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, value.mayhemModeEnabled);
+        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, Boolean(value.mayhemModeEnabled));
     }
 }
 

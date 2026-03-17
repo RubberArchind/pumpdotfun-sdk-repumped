@@ -1,7 +1,7 @@
 import { Program } from '@coral-xyz/anchor';
 import { PublicKey, Transaction, ComputeBudgetProgram, TransactionMessage, VersionedTransaction, SendTransactionError, SystemProgram } from '@solana/web3.js';
 import { TOKEN_2022_PROGRAM_ID as TOKEN_2022_PROGRAM_ID$1, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { struct, u64, bool, publicKey } from '@coral-xyz/borsh';
+import { struct, u64, bool, publicKey, u8 } from '@coral-xyz/borsh';
 import BN from 'bn.js';
 import { searcherClient } from 'jito-ts/dist/sdk/block-engine/searcher.js';
 import { Bundle } from 'jito-ts/dist/sdk/block-engine/types.js';
@@ -5096,11 +5096,11 @@ class GlobalAccount {
             u64("poolMigrationFee"),
             u64("creatorFeeBasisPoints"),
             publicKey("reservedFeeRecipient"),
-            bool("mayhemModeEnabled"),
+            u8("mayhemModeEnabled"),
         ]);
         // Decode only the fields we actively use.
         let value = structure.decode(buffer.subarray(0, minRequiredSize));
-        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, value.mayhemModeEnabled);
+        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, Boolean(value.mayhemModeEnabled));
     }
 }
 

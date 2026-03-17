@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { struct, bool, u64, publicKey, Layout } from "@coral-xyz/borsh";
+import { struct, bool, u64, u8, publicKey, Layout } from "@coral-xyz/borsh";
 
 export class GlobalAccount {
   public discriminator: bigint;
@@ -92,7 +92,7 @@ export class GlobalAccount {
       u64("poolMigrationFee"),
       u64("creatorFeeBasisPoints"),
       publicKey("reservedFeeRecipient"),
-      bool("mayhemModeEnabled"),
+      u8("mayhemModeEnabled"),
     ]);
 
     // Decode only the fields we actively use.
@@ -113,7 +113,7 @@ export class GlobalAccount {
       BigInt(value.poolMigrationFee!),
       BigInt(value.creatorFeeBasisPoints!),
       value.reservedFeeRecipient!,
-      value.mayhemModeEnabled!
+      Boolean(value.mayhemModeEnabled)
     );
   }
 }

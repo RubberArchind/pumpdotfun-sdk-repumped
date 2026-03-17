@@ -72,11 +72,11 @@ class GlobalAccount {
             borsh.u64("poolMigrationFee"),
             borsh.u64("creatorFeeBasisPoints"),
             borsh.publicKey("reservedFeeRecipient"),
-            borsh.bool("mayhemModeEnabled"),
+            borsh.u8("mayhemModeEnabled"),
         ]);
         // Decode only the fields we actively use.
         let value = structure.decode(buffer.subarray(0, minRequiredSize));
-        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, value.mayhemModeEnabled);
+        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, Boolean(value.mayhemModeEnabled));
     }
 }
 
