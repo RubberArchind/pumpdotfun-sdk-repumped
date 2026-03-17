@@ -1,7 +1,7 @@
 import { struct, bool, u64, Layout, publicKey } from "@coral-xyz/borsh";
 import { PublicKey } from "@solana/web3.js";
 import { FeeConfig } from "./FeeConfig.js";
-import { GlobalAccount } from "./GlobalAccount.js";
+import { GlobalAccount } from "./globalAccount.js";
 
 export class BondingCurveAccount {
   public discriminator: bigint;

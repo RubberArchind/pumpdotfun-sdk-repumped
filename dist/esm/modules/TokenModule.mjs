@@ -2,7 +2,7 @@ import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, get
 import { PublicKey } from '@solana/web3.js';
 import { DEFAULT_COMMITMENT } from '../pumpFun.consts.mjs';
 import { BondingCurveAccount } from '../BondingCurveAccount.mjs';
-import { GlobalAccount } from '../GlobalAccount.mjs';
+import { GlobalAccount } from '../globalAccount.mjs';
 import { FeeConfig } from '../FeeConfig.mjs';
 
 class TokenModule {

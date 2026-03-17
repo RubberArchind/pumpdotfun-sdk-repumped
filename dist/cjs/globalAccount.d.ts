@@ -19,4 +19,4 @@ export declare class GlobalAccount {
     getInitialBuyPrice(amount: bigint): bigint;
     static fromBuffer(buffer: Buffer): GlobalAccount;
 }
-//# sourceMappingURL=GlobalAccount.d.ts.map
+//# sourceMappingURL=globalAccount.d.ts.map

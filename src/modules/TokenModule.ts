@@ -11,7 +11,7 @@ import { DEFAULT_COMMITMENT } from "../pumpFun.consts.js";
 import { CreateTokenMetadata } from "../pumpFun.types.js";
 import { PumpFunSDK } from "../PumpFunSDK.js";
 import { BondingCurveAccount } from "../BondingCurveAccount.js";
-import { GlobalAccount } from "../GlobalAccount.js";
+import { GlobalAccount } from "../globalAccount.js";
 import { FeeConfig } from "../FeeConfig.js";
 
 export class TokenModule {

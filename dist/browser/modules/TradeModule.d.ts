@@ -4,10 +4,11 @@ import { PumpFunSDK } from "../PumpFunSDK.js";
 export declare class TradeModule {
     private sdk;
     constructor(sdk: PumpFunSDK);
+    private resolveFeeRecipient;
     createAndBuy(creator: Keypair, mint: Keypair, metadata: CreateTokenMetadata, buyAmountSol: bigint, slippageBasisPoints?: bigint, priorityFees?: PriorityFee, commitment?: Commitment, finality?: Finality): Promise<TransactionResult>;
     buy(buyer: Keypair, mint: PublicKey, buyAmountSol: bigint, slippageBasisPoints?: bigint, priorityFees?: PriorityFee, commitment?: Commitment, finality?: Finality): Promise<TransactionResult>;
     getBuyInstructionsBySolAmount(buyer: PublicKey, mint: PublicKey, buyAmountSol: bigint, slippageBasisPoints?: bigint, commitment?: Commitment): Promise<Transaction>;
-    buildBuyIx(buyer: PublicKey, mint: PublicKey, amount: bigint, maxSolCost: bigint, tx: Transaction, commitment: Commitment, shouldUseBuyerAsBonding: boolean): Promise<void>;
+    buildBuyIx(buyer: PublicKey, mint: PublicKey, amount: bigint, maxSolCost: bigint, tx: Transaction, commitment: Commitment, shouldUseBuyerAsBonding: boolean, isMayhemModeOverride?: boolean): Promise<void>;
     getCreateInstructions(creator: PublicKey, name: string, symbol: string, uri: string, mint: Keypair): Promise<Transaction>;
     /**
      * Create token instructions using Token2022 and mayhem mode support

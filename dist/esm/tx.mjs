@@ -1,4 +1,4 @@
-import { SendTransactionError, TransactionMessage, VersionedTransaction, Transaction, ComputeBudgetProgram } from '@solana/web3.js';
+import { Transaction, ComputeBudgetProgram, TransactionMessage, VersionedTransaction, SendTransactionError } from '@solana/web3.js';
 import { DEFAULT_COMMITMENT, DEFAULT_FINALITY } from './pumpFun.consts.mjs';
 
 async function sendTx(connection, tx, payer, signers, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {

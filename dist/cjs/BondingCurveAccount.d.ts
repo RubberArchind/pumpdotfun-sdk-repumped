@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { FeeConfig } from "./FeeConfig.js";
-import { GlobalAccount } from "./GlobalAccount.js";
+import { GlobalAccount } from "./globalAccount.js";
 export declare class BondingCurveAccount {
     discriminator: bigint;
     virtualTokenReserves: bigint;

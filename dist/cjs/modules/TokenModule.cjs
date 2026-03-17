@@ -4,7 +4,7 @@ var splToken = require('@solana/spl-token');
 var web3_js = require('@solana/web3.js');
 var pumpFun_consts = require('../pumpFun.consts.cjs');
 var BondingCurveAccount = require('../BondingCurveAccount.cjs');
-var GlobalAccount = require('../GlobalAccount.cjs');
+var globalAccount = require('../globalAccount.cjs');
 var FeeConfig = require('../FeeConfig.cjs');
 
 class TokenModule {
@@ -116,7 +116,7 @@ class TokenModule {
         const tokenAccount = await this.sdk.connection.getAccountInfo(globalAccountPDA, commitment);
         // Note: Global account does NOT have the 8-byte Anchor discriminator
         // Parse the data directly without skipping bytes
-        return GlobalAccount.GlobalAccount.fromBuffer(tokenAccount.data);
+        return globalAccount.GlobalAccount.fromBuffer(tokenAccount.data);
     }
     async getFeeConfig(commitment = pumpFun_consts.DEFAULT_COMMITMENT) {
         const feePda = this.sdk.pda.getPumpFeeConfigPda();

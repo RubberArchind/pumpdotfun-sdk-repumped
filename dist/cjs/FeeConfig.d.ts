@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { BondingCurveAccount } from "./BondingCurveAccount.js";
-import { GlobalAccount } from "./GlobalAccount.js";
+import { GlobalAccount } from "./globalAccount.js";
 import { BN } from "@coral-xyz/anchor";
 export interface CalculatedFeesBps {
     protocolFeeBps: bigint;

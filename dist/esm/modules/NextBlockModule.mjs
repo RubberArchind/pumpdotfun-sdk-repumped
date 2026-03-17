@@ -1,6 +1,6 @@
 import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 import { DEFAULT_COMMITMENT } from '../pumpFun.consts.mjs';
-import { calculateWithSlippageBuy, calculateWithSlippageSell } from '../slippage.mjs';
+import { calculateWithSlippageSell, calculateWithSlippageBuy } from '../slippage.mjs';
 import { buildSignedTx } from '../tx.mjs';
 import AgentRegistry from '../AgentRegistry.mjs';
 

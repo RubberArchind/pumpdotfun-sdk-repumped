@@ -7,11 +7,12 @@ import {
   Transaction,
   PublicKey,
 } from "@solana/web3.js";
-import { GlobalAccount } from "../GlobalAccount.js";
+import { GlobalAccount } from "../globalAccount.js";
 
 import {
   DEFAULT_COMMITMENT,
   DEFAULT_FINALITY,
+  MAYHEM_FEE_RECIPIENT,
   MAYHEM_PROGRAM_ID,
 } from "../pumpFun.consts.js";
 import {
@@ -28,6 +29,19 @@ import { sendTx } from "../tx.js";
 
 export class TradeModule {
   constructor(private sdk: PumpFunSDK) { }
+
+  private resolveFeeRecipient(
+    globalAccount: GlobalAccount,
+    isMayhemMode: boolean
+  ): PublicKey {
+    if (!isMayhemMode) {
+      return globalAccount.feeRecipient;
+    }
+
+    return PublicKey.default.equals(globalAccount.reservedFeeRecipient)
+      ? MAYHEM_FEE_RECIPIENT
+      : globalAccount.reservedFeeRecipient;
+  }
 
   async createAndBuy(
     creator: Keypair,
@@ -180,7 +194,8 @@ export class TradeModule {
     maxSolCost: bigint,
     tx: Transaction,
     commitment: Commitment,
-    shouldUseBuyerAsBonding: boolean
+    shouldUseBuyerAsBonding: boolean,
+    isMayhemModeOverride?: boolean
   ): Promise<void> {
     const bondingCurve = this.sdk.pda.getBondingCurvePDA(mint);
 
@@ -208,6 +223,11 @@ export class TradeModule {
     );
     const globalAccount = await this.sdk.token.getGlobalAccount(commitment);
     const globalAccountPDA = this.sdk.pda.getGlobalAccountPda();
+    const bondingCurveAccount = shouldUseBuyerAsBonding
+      ? null
+      : await this.sdk.token.getBondingCurveAccount(mint, commitment);
+    const isMayhemMode =
+      isMayhemModeOverride ?? bondingCurveAccount?.isMayhemMode ?? false;
     const bondingCreator = shouldUseBuyerAsBonding
       ? this.sdk.pda.getCreatorVaultPda(buyer)
       : await this.sdk.token.getBondingCurveCreator(bondingCurve, commitment);
@@ -231,7 +251,7 @@ export class TradeModule {
       .buy(new BN(amount.toString()), new BN(maxSolCost.toString()))
       .accounts({
         global: globalAccountPDA,
-        feeRecipient: globalAccount.feeRecipient,
+        feeRecipient: this.resolveFeeRecipient(globalAccount, isMayhemMode),
         mint,
         bondingCurve,
         associatedBondingCurve: associatedBonding,
@@ -403,7 +423,8 @@ export class TradeModule {
         buyAmountWithSlippage,
         transaction,
         commitment,
-        true
+        true,
+        isMayhemMode
       );
     }
 
@@ -456,10 +477,14 @@ export class TradeModule {
       globalPda,
       commitment
     );
-    const feeRecipient = GlobalAccount.fromBuffer(globalBuf!.data).feeRecipient;
+    const globalAccount = GlobalAccount.fromBuffer(globalBuf!.data);
 
     const bondingCreator = await this.sdk.token.getBondingCurveCreator(
       bondingCurve,
+      commitment
+    );
+    const bondingCurveAccount = await this.sdk.token.getBondingCurveAccount(
+      mint,
       commitment
     );
     const creatorVault = this.sdk.pda.getCreatorVaultPda(bondingCreator);
@@ -470,13 +495,15 @@ export class TradeModule {
       .sell(new BN(tokenAmount.toString()), new BN(minSolOutput.toString()))
       .accounts({
         global: globalPda,
-        feeRecipient,
+        feeRecipient: this.resolveFeeRecipient(
+          globalAccount,
+          bondingCurveAccount?.isMayhemMode ?? false
+        ),
         mint,
         bondingCurve,
         associatedBondingCurve: associatedBonding,
         associatedUser,
         user: seller,
-        systemProgram: this.sdk.connection.rpcEndpoint.includes('localhost') ? undefined : undefined,
         creatorVault,
         tokenProgram, // Explicitly pass the correct token program (Token2022 or legacy)
         eventAuthority,

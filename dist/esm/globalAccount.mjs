@@ -47,14 +47,14 @@ class GlobalAccount {
             : this.initialRealTokenReserves;
     }
     static fromBuffer(buffer) {
-        // The Global account structure has changed significantly and is now 740 bytes
-        // The new structure has additional fields that we don't fully understand yet
-        // We'll parse only the core fields we need for trading operations
-        const minRequiredSize = 162; // Up to creatorFeeBasisPoints
+        // The Global account structure has changed significantly and is now 740 bytes.
+        // We parse the stable trading fields, including the reserved fee recipient and
+        // mayhem mode flag introduced in the Nov 2025 upgrade.
+        const minRequiredSize = 195;
         if (buffer.length < minRequiredSize) {
             throw new Error(`Invalid GlobalAccount buffer size: ${buffer.length} (expected at least ${minRequiredSize})`);
         }
-        // Parse only the core fields that haven't changed structure
+        // Parse only the stable fields needed for trading operations.
         const structure = struct([
             u64("discriminator"),
             bool("initialized"),
@@ -69,14 +69,14 @@ class GlobalAccount {
             bool("enableMigrate"),
             u64("poolMigrationFee"),
             u64("creatorFeeBasisPoints"),
+            publicKey("reservedFeeRecipient"),
+            bool("mayhemModeEnabled"),
         ]);
-        // Decode only the first 162 bytes (up to creatorFeeBasisPoints)
+        // Decode only the fields we actively use.
         let value = structure.decode(buffer.subarray(0, minRequiredSize));
-        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), PublicKey.default, // reservedFeeRecipient - structure changed, use default
-        false // mayhemModeEnabled - structure changed, use default
-        );
+        return new GlobalAccount(BigInt(value.discriminator), value.initialized, value.authority, value.feeRecipient, BigInt(value.initialVirtualTokenReserves), BigInt(value.initialVirtualSolReserves), BigInt(value.initialRealTokenReserves), BigInt(value.tokenTotalSupply), BigInt(value.feeBasisPoints), value.withdrawAuthority, value.enableMigrate, BigInt(value.poolMigrationFee), BigInt(value.creatorFeeBasisPoints), value.reservedFeeRecipient, value.mayhemModeEnabled);
     }
 }
 
 export { GlobalAccount };
-//# sourceMappingURL=GlobalAccount.mjs.map
+//# sourceMappingURL=globalAccount.mjs.map

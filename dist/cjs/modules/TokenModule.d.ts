@@ -2,7 +2,7 @@ import { PublicKey, Transaction, Commitment } from "@solana/web3.js";
 import { CreateTokenMetadata } from "../pumpFun.types.js";
 import { PumpFunSDK } from "../PumpFunSDK.js";
 import { BondingCurveAccount } from "../BondingCurveAccount.js";
-import { GlobalAccount } from "../GlobalAccount.js";
+import { GlobalAccount } from "../globalAccount.js";
 import { FeeConfig } from "../FeeConfig.js";
 export declare class TokenModule {
     private sdk;
