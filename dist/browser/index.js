@@ -4859,6 +4859,16 @@ const USER_VOLUME_SEED = "user_volume_accumulator";
 // Mayhem mode constants (Breaking change Nov 11, 2025)
 const MAYHEM_PROGRAM_ID = new PublicKey("MAyhSmzXzV1pTf7LsNkrNwkWKTo4ougAJ1PPg47MD4e");
 const MAYHEM_FEE_RECIPIENT = new PublicKey("GesfTA3X2arioaHp8bbKdjG9vJtskViWACZoYvxp4twS");
+const MAYHEM_FEE_RECIPIENTS = [
+    MAYHEM_FEE_RECIPIENT,
+    new PublicKey("4budycTjhs9fD6xw62VBducVTNgMgJJ5BgtKq7mAZwn6"),
+    new PublicKey("8SBKzEQU4nLSzcwF4a74F2iaUDQyTfjGndn6qUWBnrpR"),
+    new PublicKey("4UQeTP1T39KZ9Sfxzo3WR5skgsaP6NZa87BAkuazLEKH"),
+    new PublicKey("8sNeir4QsLsJdYpc9RZacohhK1Y5FLU3nC5LXgYB4aa6"),
+    new PublicKey("Fh9HmeLNUMVCvejxCtCL2DbYaRyBFVJ5xrWkLnMH6fdk"),
+    new PublicKey("463MEnMeGyJekNZFQSTUABBEbLnvMTALbT6ZmsxAbAdq"),
+    new PublicKey("6AUH3WEHucYZyC61hqpqYUWVto5qA5hjHuNQ32GNnNxA"),
+];
 const MAYHEM_STATE_SEED = "mayhem-state";
 const GLOBAL_PARAMS_SEED = "global-params";
 const SOL_VAULT_SEED = "sol-vault";
@@ -5400,9 +5410,13 @@ class TradeModule {
         if (!isMayhemMode) {
             return globalAccount.feeRecipient;
         }
-        return PublicKey.default.equals(globalAccount.reservedFeeRecipient)
-            ? MAYHEM_FEE_RECIPIENT
-            : globalAccount.reservedFeeRecipient;
+        const globalRecipient = globalAccount.reservedFeeRecipient;
+        const documentedRecipient = MAYHEM_FEE_RECIPIENTS.find((recipient) => recipient.equals(globalRecipient));
+        if (documentedRecipient) {
+            return documentedRecipient;
+        }
+        const randomIndex = Math.floor(Math.random() * MAYHEM_FEE_RECIPIENTS.length);
+        return MAYHEM_FEE_RECIPIENTS[randomIndex] ?? MAYHEM_FEE_RECIPIENT;
     }
     async createAndBuy(creator, mint, metadata, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
         const tokenMetadata = await this.sdk.token.createTokenMetadata(metadata);
@@ -6329,5 +6343,5 @@ class PumpFunSDK {
     }
 }
 
-export { ASTRA_ENDPOINT_BY_REGION, AstraModule, BONDING_CURVE_SEED, BondingCurveAccount, DEFAULT_COMMITMENT, DEFAULT_DECIMALS, DEFAULT_FINALITY, EVENT_AUTHORITY_SEED, EventModule, GLOBAL_ACCOUNT_SEED, GLOBAL_PARAMS_SEED, GLOBAL_VOLUME_SEED, GlobalAccount, JitoModule, LEGACY_TOKEN_PROGRAM_ID, MAYHEM_FEE_RECIPIENT, MAYHEM_PROGRAM_ID, MAYHEM_STATE_SEED, METADATA_SEED, MINT_AUTHORITY_SEED, MPL_TOKEN_METADATA_PROGRAM_ID, NEXTBLOCK_ENDPOINT_BY_REGION, NODE1_ENDPOINT_BY_REGION, NextBlockModule, NodeOneModule, PUMP_FEE_PROGRAM_ID, PUMP_PROGRAM_ID, PumpFunSDK, Region, SLOT_ENDPOINT_BY_REGION, SOL_VAULT_SEED, SlotModule, TOKEN_2022_PROGRAM_ID, TokenModule, TradeModule, USER_VOLUME_SEED, buildSignedTx, buildVersionedTx, calculateWithSlippageBuy, calculateWithSlippageSell, converters, getHealthBody, getTxDetails, sendTx, toCollectCreatorFeeEvent, toCompleteEvent, toCompletePumpAmmMigrationEvent, toCreateEvent, toExtendAccountEvent, toSetCreatorEvent, toSetMetaplexCreatorEvent, toSetParamsEvent, toTradeEvent, toUpdateGlobalAuthorityEvent };
+export { ASTRA_ENDPOINT_BY_REGION, AstraModule, BONDING_CURVE_SEED, BondingCurveAccount, DEFAULT_COMMITMENT, DEFAULT_DECIMALS, DEFAULT_FINALITY, EVENT_AUTHORITY_SEED, EventModule, GLOBAL_ACCOUNT_SEED, GLOBAL_PARAMS_SEED, GLOBAL_VOLUME_SEED, GlobalAccount, JitoModule, LEGACY_TOKEN_PROGRAM_ID, MAYHEM_FEE_RECIPIENT, MAYHEM_FEE_RECIPIENTS, MAYHEM_PROGRAM_ID, MAYHEM_STATE_SEED, METADATA_SEED, MINT_AUTHORITY_SEED, MPL_TOKEN_METADATA_PROGRAM_ID, NEXTBLOCK_ENDPOINT_BY_REGION, NODE1_ENDPOINT_BY_REGION, NextBlockModule, NodeOneModule, PUMP_FEE_PROGRAM_ID, PUMP_PROGRAM_ID, PumpFunSDK, Region, SLOT_ENDPOINT_BY_REGION, SOL_VAULT_SEED, SlotModule, TOKEN_2022_PROGRAM_ID, TokenModule, TradeModule, USER_VOLUME_SEED, buildSignedTx, buildVersionedTx, calculateWithSlippageBuy, calculateWithSlippageSell, converters, getHealthBody, getTxDetails, sendTx, toCollectCreatorFeeEvent, toCompleteEvent, toCompletePumpAmmMigrationEvent, toCreateEvent, toExtendAccountEvent, toSetCreatorEvent, toSetMetaplexCreatorEvent, toSetParamsEvent, toTradeEvent, toUpdateGlobalAuthorityEvent };
 //# sourceMappingURL=index.js.map

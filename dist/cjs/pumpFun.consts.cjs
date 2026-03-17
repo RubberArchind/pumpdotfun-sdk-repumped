@@ -14,6 +14,16 @@ const USER_VOLUME_SEED = "user_volume_accumulator";
 // Mayhem mode constants (Breaking change Nov 11, 2025)
 const MAYHEM_PROGRAM_ID = new web3_js.PublicKey("MAyhSmzXzV1pTf7LsNkrNwkWKTo4ougAJ1PPg47MD4e");
 const MAYHEM_FEE_RECIPIENT = new web3_js.PublicKey("GesfTA3X2arioaHp8bbKdjG9vJtskViWACZoYvxp4twS");
+const MAYHEM_FEE_RECIPIENTS = [
+    MAYHEM_FEE_RECIPIENT,
+    new web3_js.PublicKey("4budycTjhs9fD6xw62VBducVTNgMgJJ5BgtKq7mAZwn6"),
+    new web3_js.PublicKey("8SBKzEQU4nLSzcwF4a74F2iaUDQyTfjGndn6qUWBnrpR"),
+    new web3_js.PublicKey("4UQeTP1T39KZ9Sfxzo3WR5skgsaP6NZa87BAkuazLEKH"),
+    new web3_js.PublicKey("8sNeir4QsLsJdYpc9RZacohhK1Y5FLU3nC5LXgYB4aa6"),
+    new web3_js.PublicKey("Fh9HmeLNUMVCvejxCtCL2DbYaRyBFVJ5xrWkLnMH6fdk"),
+    new web3_js.PublicKey("463MEnMeGyJekNZFQSTUABBEbLnvMTALbT6ZmsxAbAdq"),
+    new web3_js.PublicKey("6AUH3WEHucYZyC61hqpqYUWVto5qA5hjHuNQ32GNnNxA"),
+];
 const MAYHEM_STATE_SEED = "mayhem-state";
 const GLOBAL_PARAMS_SEED = "global-params";
 const SOL_VAULT_SEED = "sol-vault";
@@ -66,6 +76,7 @@ exports.GLOBAL_PARAMS_SEED = GLOBAL_PARAMS_SEED;
 exports.GLOBAL_VOLUME_SEED = GLOBAL_VOLUME_SEED;
 exports.LEGACY_TOKEN_PROGRAM_ID = LEGACY_TOKEN_PROGRAM_ID;
 exports.MAYHEM_FEE_RECIPIENT = MAYHEM_FEE_RECIPIENT;
+exports.MAYHEM_FEE_RECIPIENTS = MAYHEM_FEE_RECIPIENTS;
 exports.MAYHEM_PROGRAM_ID = MAYHEM_PROGRAM_ID;
 exports.MAYHEM_STATE_SEED = MAYHEM_STATE_SEED;
 exports.METADATA_SEED = METADATA_SEED;

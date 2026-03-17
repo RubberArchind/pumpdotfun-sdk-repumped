@@ -19,6 +19,16 @@ export const MAYHEM_PROGRAM_ID = new PublicKey(
 export const MAYHEM_FEE_RECIPIENT = new PublicKey(
   "GesfTA3X2arioaHp8bbKdjG9vJtskViWACZoYvxp4twS"
 );
+export const MAYHEM_FEE_RECIPIENTS = [
+  MAYHEM_FEE_RECIPIENT,
+  new PublicKey("4budycTjhs9fD6xw62VBducVTNgMgJJ5BgtKq7mAZwn6"),
+  new PublicKey("8SBKzEQU4nLSzcwF4a74F2iaUDQyTfjGndn6qUWBnrpR"),
+  new PublicKey("4UQeTP1T39KZ9Sfxzo3WR5skgsaP6NZa87BAkuazLEKH"),
+  new PublicKey("8sNeir4QsLsJdYpc9RZacohhK1Y5FLU3nC5LXgYB4aa6"),
+  new PublicKey("Fh9HmeLNUMVCvejxCtCL2DbYaRyBFVJ5xrWkLnMH6fdk"),
+  new PublicKey("463MEnMeGyJekNZFQSTUABBEbLnvMTALbT6ZmsxAbAdq"),
+  new PublicKey("6AUH3WEHucYZyC61hqpqYUWVto5qA5hjHuNQ32GNnNxA"),
+];
 export const MAYHEM_STATE_SEED = "mayhem-state";
 export const GLOBAL_PARAMS_SEED = "global-params";
 export const SOL_VAULT_SEED = "sol-vault";

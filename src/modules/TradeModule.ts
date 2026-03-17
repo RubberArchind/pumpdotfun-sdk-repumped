@@ -13,6 +13,7 @@ import {
   DEFAULT_COMMITMENT,
   DEFAULT_FINALITY,
   MAYHEM_FEE_RECIPIENT,
+  MAYHEM_FEE_RECIPIENTS,
   MAYHEM_PROGRAM_ID,
 } from "../pumpFun.consts.js";
 import {
@@ -38,9 +39,17 @@ export class TradeModule {
       return globalAccount.feeRecipient;
     }
 
-    return PublicKey.default.equals(globalAccount.reservedFeeRecipient)
-      ? MAYHEM_FEE_RECIPIENT
-      : globalAccount.reservedFeeRecipient;
+    const globalRecipient = globalAccount.reservedFeeRecipient;
+    const documentedRecipient = MAYHEM_FEE_RECIPIENTS.find((recipient) =>
+      recipient.equals(globalRecipient)
+    );
+
+    if (documentedRecipient) {
+      return documentedRecipient;
+    }
+
+    const randomIndex = Math.floor(Math.random() * MAYHEM_FEE_RECIPIENTS.length);
+    return MAYHEM_FEE_RECIPIENTS[randomIndex] ?? MAYHEM_FEE_RECIPIENT;
   }
 
   async createAndBuy(

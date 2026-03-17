@@ -1,8 +1,8 @@
 import BN from 'bn.js';
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { Transaction, PublicKey } from '@solana/web3.js';
 import { GlobalAccount } from '../globalAccount.mjs';
-import { MAYHEM_FEE_RECIPIENT, DEFAULT_COMMITMENT, DEFAULT_FINALITY, MAYHEM_PROGRAM_ID } from '../pumpFun.consts.mjs';
+import { MAYHEM_FEE_RECIPIENTS, MAYHEM_FEE_RECIPIENT, DEFAULT_COMMITMENT, DEFAULT_FINALITY, MAYHEM_PROGRAM_ID } from '../pumpFun.consts.mjs';
 import { calculateWithSlippageSell, calculateWithSlippageBuy } from '../slippage.mjs';
 import { sendTx } from '../tx.mjs';
 
@@ -15,9 +15,13 @@ class TradeModule {
         if (!isMayhemMode) {
             return globalAccount.feeRecipient;
         }
-        return PublicKey.default.equals(globalAccount.reservedFeeRecipient)
-            ? MAYHEM_FEE_RECIPIENT
-            : globalAccount.reservedFeeRecipient;
+        const globalRecipient = globalAccount.reservedFeeRecipient;
+        const documentedRecipient = MAYHEM_FEE_RECIPIENTS.find((recipient) => recipient.equals(globalRecipient));
+        if (documentedRecipient) {
+            return documentedRecipient;
+        }
+        const randomIndex = Math.floor(Math.random() * MAYHEM_FEE_RECIPIENTS.length);
+        return MAYHEM_FEE_RECIPIENTS[randomIndex] ?? MAYHEM_FEE_RECIPIENT;
     }
     async createAndBuy(creator, mint, metadata, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
         const tokenMetadata = await this.sdk.token.createTokenMetadata(metadata);

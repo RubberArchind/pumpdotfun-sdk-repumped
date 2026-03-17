@@ -10,6 +10,7 @@ export declare const GLOBAL_VOLUME_SEED = "global_volume_accumulator";
 export declare const USER_VOLUME_SEED = "user_volume_accumulator";
 export declare const MAYHEM_PROGRAM_ID: PublicKey;
 export declare const MAYHEM_FEE_RECIPIENT: PublicKey;
+export declare const MAYHEM_FEE_RECIPIENTS: PublicKey[];
 export declare const MAYHEM_STATE_SEED = "mayhem-state";
 export declare const GLOBAL_PARAMS_SEED = "global-params";
 export declare const SOL_VAULT_SEED = "sol-vault";

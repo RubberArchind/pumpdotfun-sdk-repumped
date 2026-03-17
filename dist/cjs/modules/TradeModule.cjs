@@ -17,9 +17,13 @@ class TradeModule {
         if (!isMayhemMode) {
             return globalAccount.feeRecipient;
         }
-        return web3_js.PublicKey.default.equals(globalAccount.reservedFeeRecipient)
-            ? pumpFun_consts.MAYHEM_FEE_RECIPIENT
-            : globalAccount.reservedFeeRecipient;
+        const globalRecipient = globalAccount.reservedFeeRecipient;
+        const documentedRecipient = pumpFun_consts.MAYHEM_FEE_RECIPIENTS.find((recipient) => recipient.equals(globalRecipient));
+        if (documentedRecipient) {
+            return documentedRecipient;
+        }
+        const randomIndex = Math.floor(Math.random() * pumpFun_consts.MAYHEM_FEE_RECIPIENTS.length);
+        return pumpFun_consts.MAYHEM_FEE_RECIPIENTS[randomIndex] ?? pumpFun_consts.MAYHEM_FEE_RECIPIENT;
     }
     async createAndBuy(creator, mint, metadata, buyAmountSol, slippageBasisPoints = 500n, priorityFees, commitment = pumpFun_consts.DEFAULT_COMMITMENT, finality = pumpFun_consts.DEFAULT_FINALITY) {
         const tokenMetadata = await this.sdk.token.createTokenMetadata(metadata);
